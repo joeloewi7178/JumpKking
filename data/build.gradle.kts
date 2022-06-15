@@ -1,9 +1,15 @@
+import com.google.protobuf.gradle.builtins
+import com.google.protobuf.gradle.generateProtoTasks
+import com.google.protobuf.gradle.protobuf
+import com.google.protobuf.gradle.protoc
+
 plugins {
     id("com.android.library")
     id("kotlin-android")
     id("kotlin-kapt")
     id("com.google.protobuf")
     id("dagger.hilt.android.plugin")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -62,4 +68,32 @@ dependencies {
     //hilt
     implementation("com.google.dagger:hilt-android:${Versions.hilt}")
     kapt("com.google.dagger:hilt-android-compiler:${Versions.hilt}")
+
+    implementation("androidx.paging:paging-common-ktx:${Versions.paging}")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.2")
+
+    //firebase
+    implementation(platform("com.google.firebase:firebase-bom:30.0.1"))
+    implementation("com.google.firebase:firebase-firestore-ktx")
+
+    // https://mvnrepository.com/artifact/com.firebaseui/firebase-ui-storage
+    implementation("com.firebaseui:firebase-ui-firestore:8.0.1")
+}
+
+protobuf {
+
+    protoc {
+        artifact = "com.google.protobuf:protoc:${Versions.protobuf}"
+    }
+
+    generateProtoTasks {
+        all().forEach { task ->
+            task.builtins {
+                create("java") {
+                    option("lite")
+                }
+            }
+        }
+    }
 }
