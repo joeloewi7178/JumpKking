@@ -14,9 +14,9 @@ object MapperModule {
 
     @Singleton
     @Provides
-    fun provideValuesMapper() = ValuesMapper()
+    fun provideValuesMapper(): ValuesMapper = ValuesMapper()
 
     @Singleton
     @Provides
-    fun provideReportCardMapper() = ReportCardMapper()
+    fun provideReportCardMapper(): ReportCardMapper = ReportCardMapper()
 }

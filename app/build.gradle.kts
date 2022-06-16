@@ -150,6 +150,12 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore-ktx")
 
     implementation("nl.marc-apps:tts:1.0.0")
+
+    implementation("io.reactivex.rxjava3:rxandroid:3.0.0")
+    implementation("io.reactivex.rxjava3:rxjava:3.1.5")
+
+    // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-rx3
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-rx3:1.6.2")
 }
 
 kapt {

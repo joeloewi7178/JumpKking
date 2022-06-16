@@ -76,9 +76,7 @@ dependencies {
     //firebase
     implementation(platform("com.google.firebase:firebase-bom:30.0.1"))
     implementation("com.google.firebase:firebase-firestore-ktx")
-
-    // https://mvnrepository.com/artifact/com.firebaseui/firebase-ui-storage
-    implementation("com.firebaseui:firebase-ui-firestore:8.0.1")
+    implementation("com.google.firebase:firebase-auth-ktx")
 }
 
 protobuf {

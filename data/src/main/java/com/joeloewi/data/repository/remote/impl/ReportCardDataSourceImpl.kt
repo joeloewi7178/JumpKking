@@ -4,10 +4,11 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
-import com.firebase.ui.firestore.paging.FirestorePagingSource
 import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.ktx.toObject
+import com.joeloewi.data.common.FirestorePagingSource
 import com.joeloewi.data.entity.ReportCardEntity
 import com.joeloewi.data.mapper.ReportCardMapper
 import com.joeloewi.data.repository.remote.ReportCardDataSource
@@ -32,7 +33,16 @@ class ReportCardDataSourceImpl @Inject constructor(
             pageSize = 8
         ),
         pagingSourceFactory = {
-            FirestorePagingSource(firestoreReportCardCollection, source)
+            FirestorePagingSource(
+                firestoreReportCardCollection.orderBy(
+                    "jumpCount",
+                    Query.Direction.DESCENDING
+                ).orderBy(
+                    "timestamp",
+                    Query.Direction.ASCENDING
+                ).limit(100),
+                source
+            )
         }
     ).flow.map { pagingData ->
         pagingData.map {

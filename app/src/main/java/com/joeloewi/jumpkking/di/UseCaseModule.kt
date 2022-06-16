@@ -1,7 +1,9 @@
 package com.joeloewi.jumpkking.di
 
+import com.joeloewi.domain.repository.FirebaseAuthRepository
 import com.joeloewi.domain.repository.ReportCardRepository
 import com.joeloewi.domain.repository.ValuesRepository
+import com.joeloewi.domain.usecase.FirebaseAuthUseCase
 import com.joeloewi.domain.usecase.ReportCardUseCase
 import com.joeloewi.domain.usecase.ValuesUseCase
 import dagger.Module
@@ -38,4 +40,14 @@ object UseCaseModule {
     @Singleton
     fun provideGetOneReportCardUseCase(reportCardRepository: ReportCardRepository): ReportCardUseCase.GetOne =
         ReportCardUseCase.GetOne(reportCardRepository)
+
+    @Provides
+    @Singleton
+    fun provideGetCurrentUserFirebaseAuthUseCase(firebaseAuthRepository: FirebaseAuthRepository): FirebaseAuthUseCase.GetCurrentUser =
+        FirebaseAuthUseCase.GetCurrentUser(firebaseAuthRepository)
+
+    @Provides
+    @Singleton
+    fun provideSignInAnonymouslyFirebaseAuthUseCase(firebaseAuthRepository: FirebaseAuthRepository): FirebaseAuthUseCase.SignInAnonymously =
+        FirebaseAuthUseCase.SignInAnonymously(firebaseAuthRepository)
 }

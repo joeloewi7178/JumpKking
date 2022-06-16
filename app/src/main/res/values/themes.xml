@@ -2,4 +2,10 @@
 <resources>
 
     <style name="Theme.JumpKking" parent="Theme.Material3.DayNight.NoActionBar" />
+
+    <style name="Theme.AppSplash" parent="Theme.SplashScreen.IconBackground">
+        <item name="postSplashScreenTheme">@style/Theme.JumpKking</item>
+        <item name="windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+    </style>
 </resources>
