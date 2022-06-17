@@ -148,7 +148,7 @@ fun JumpKkingApp() {
             sheetContent = {
                 val coroutineScope = rememberCoroutineScope()
 
-                when (scaffoldState.bottomSheetState.targetValue) {
+                when (scaffoldState.bottomSheetState.currentValue) {
                     BottomSheetValue.Collapsed -> {
                         CollapsedBottomSheet(
                             coroutineScope = coroutineScope,
@@ -330,7 +330,11 @@ fun CollapsedBottomSheet(
             }
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding))
+        Box(
+            modifier = Modifier
+            .padding(innerPadding)
+            .fillMaxSize()
+        )
     }
 }
 
