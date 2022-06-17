@@ -14,10 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Expand
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -310,7 +307,7 @@ fun CollapsedBottomSheet(
             Column {
                 SmallTopAppBar(
                     title = {
-                        Text(text = "점프끼잉에 도전하세요")
+                        Text(text = "다 같이 점프해요.")
                     },
                     actions = {
                         IconButton(
@@ -332,8 +329,8 @@ fun CollapsedBottomSheet(
     ) { innerPadding ->
         Box(
             modifier = Modifier
-            .padding(innerPadding)
-            .fillMaxSize()
+                .padding(innerPadding)
+                .fillMaxSize()
         )
     }
 }
@@ -368,6 +365,17 @@ fun ExpandedBottomSheet(
                         WindowInsets.statusBars.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
                             .asPaddingValues()
                     ),
+                    navigationIcon = {
+                        IconButton(
+                            onClick = {  },
+                            enabled = false
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Leaderboard,
+                                contentDescription = Icons.Default.Leaderboard.name
+                            )
+                        }
+                    },
                     title = {
                         Text(text = "상위 100명 랭킹")
                     },
