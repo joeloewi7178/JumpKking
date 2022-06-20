@@ -49,7 +49,9 @@ class MainViewModel @Inject constructor(
             }
 
             getOneReportCardUseCase()?.let {
-                setJumpCount(it.jumpCount)
+                if (_values.first().jumpCount == 0L) {
+                    setJumpCount(it.jumpCount)
+                }
             }
 
             _insertReportCard.onEach {

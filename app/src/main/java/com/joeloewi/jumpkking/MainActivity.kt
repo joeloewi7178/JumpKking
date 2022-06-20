@@ -16,6 +16,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -44,6 +45,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemsIndexed
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.google.accompanist.placeholder.PlaceholderHighlight
+import com.google.accompanist.placeholder.fade
+import com.google.accompanist.placeholder.placeholder
 import com.google.android.material.color.DynamicColors
 import com.joeloewi.jumpkking.state.Lce
 import com.joeloewi.jumpkking.ui.theme.ContentAlpha
@@ -52,7 +58,6 @@ import com.joeloewi.jumpkking.util.*
 import com.joeloewi.jumpkking.util.ListItem
 import com.joeloewi.jumpkking.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import nl.marc_apps.tts.TextToSpeech
 import nl.marc_apps.tts.TextToSpeechInstance
@@ -143,18 +148,14 @@ fun JumpKkingApp() {
             scaffoldState = scaffoldState,
             sheetPeekHeight = 64.dp,
             sheetContent = {
-                val coroutineScope = rememberCoroutineScope()
-
                 when (scaffoldState.bottomSheetState.currentValue) {
                     BottomSheetValue.Collapsed -> {
                         CollapsedBottomSheet(
-                            coroutineScope = coroutineScope,
                             scaffoldState = scaffoldState
                         )
                     }
                     BottomSheetValue.Expanded -> {
                         ExpandedBottomSheet(
-                            coroutineScope = coroutineScope,
                             scaffoldState = scaffoldState,
                             mainViewModel = mainViewModel
                         )
@@ -240,7 +241,7 @@ fun HamsterImage(
     textToSpeech: Lce<TextToSpeechInstance>,
     onCountChange: () -> Unit
 ) {
-    val kking = "끼잉!"
+    val kking = remember { "끼잉!" }
     val configuration = LocalConfiguration.current
     val maxOffset = (configuration.screenHeightDp * 0.3).dp
     val coroutineScope = rememberCoroutineScope()
@@ -290,7 +291,9 @@ fun HamsterImage(
 
         }
         Lce.Loading -> {
-            CircularProgressIndicator()
+            CircularProgressIndicator(
+                modifier = Modifier.padding(16.dp)
+            )
         }
     }
 }
@@ -299,9 +302,10 @@ fun HamsterImage(
 @ExperimentalMaterial3Api
 @Composable
 fun CollapsedBottomSheet(
-    coroutineScope: CoroutineScope,
     scaffoldState: BottomSheetScaffoldState
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
     Scaffold(
         topBar = {
             Column {
@@ -340,10 +344,10 @@ fun CollapsedBottomSheet(
 @ExperimentalMaterial3Api
 @Composable
 fun ExpandedBottomSheet(
-    coroutineScope: CoroutineScope,
     scaffoldState: BottomSheetScaffoldState,
     mainViewModel: MainViewModel
 ) {
+    val coroutineScope = rememberCoroutineScope()
     val pagedReportCards =
         mainViewModel.pagedReportCards.collectAsLazyPagingItems()
 
@@ -367,7 +371,7 @@ fun ExpandedBottomSheet(
                     ),
                     navigationIcon = {
                         IconButton(
-                            onClick = {  },
+                            onClick = { },
                             enabled = false
                         ) {
                             Icon(
@@ -426,7 +430,7 @@ fun ExpandedBottomSheet(
                             Text(text = "${index + 1}")
                         },
                         text = {
-                            Text(text = "${item.jumpCount}")
+                            Text(text = DecimalFormat.getInstance().format(item.jumpCount))
                         },
                         secondaryText = if (isMyReportCard) {
                             {
@@ -441,7 +445,65 @@ fun ExpandedBottomSheet(
                     )
                 } else {
                     ListItem(
-                        text = {}
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        icon = {
+                            AsyncImage(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .placeholder(
+                                        visible = true,
+                                        color = MaterialTheme.colorScheme.outline,
+                                        highlight = PlaceholderHighlight.fade(
+                                            highlightColor = MaterialTheme.colorScheme.background,
+                                        )
+                                    ),
+                                model = ImageRequest.Builder(
+                                    LocalContext.current
+                                ).build(),
+                                contentDescription = null
+                            )
+                        },
+                        trailing = {
+                            Checkbox(
+                                modifier = Modifier
+                                    .placeholder(
+                                        visible = true,
+                                        color = MaterialTheme.colorScheme.outline,
+                                        highlight = PlaceholderHighlight.fade(
+                                            highlightColor = MaterialTheme.colorScheme.background,
+                                        )
+                                    ),
+                                checked = false,
+                                onCheckedChange = null
+                            )
+                        },
+                        text = {
+                            Text(
+                                modifier = Modifier
+                                    .placeholder(
+                                        visible = true,
+                                        color = MaterialTheme.colorScheme.outline,
+                                        highlight = PlaceholderHighlight.fade(
+                                            highlightColor = MaterialTheme.colorScheme.background,
+                                        )
+                                    ),
+                                text = ""
+                            )
+                        },
+                        secondaryText = {
+                            Text(
+                                modifier = Modifier
+                                    .placeholder(
+                                        visible = true,
+                                        color = MaterialTheme.colorScheme.outline,
+                                        highlight = PlaceholderHighlight.fade(
+                                            highlightColor = MaterialTheme.colorScheme.background,
+                                        )
+                                    ),
+                                text = ""
+                            )
+                        }
                     )
                 }
             }
