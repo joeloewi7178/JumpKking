@@ -372,12 +372,21 @@ fun ExpandedBottomSheet(
         mainViewModel.pagedReportCards.collectAsLazyPagingItems()
 
     LaunchedEffect(pagedReportCards.loadState) {
-        pagedReportCards.loadState.source.forEach { _, loadState ->
-            if (loadState is LoadState.Error) {
-                with(loadState) {
-                    val message = this.error.castToQuotaReachedExceptionAndGetMessage()
+        val loadStates = mutableListOf<LoadState>()
 
-                    scaffoldState.snackbarHostState.showSnackbar(
+        with(pagedReportCards.loadState.source) {
+            loadStates.add(append)
+            loadStates.add(prepend)
+            loadStates.add(refresh)
+        }
+
+        loadStates.forEach {
+            if (it is LoadState.Error) {
+                val message = it.error.castToQuotaReachedExceptionAndGetMessage()
+
+                with(scaffoldState.snackbarHostState) {
+                    currentSnackbarData?.dismiss()
+                    showSnackbar(
                         message = message,
                         duration = SnackbarDuration.Indefinite
                     )
