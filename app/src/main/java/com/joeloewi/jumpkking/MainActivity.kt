@@ -43,6 +43,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
+import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemsIndexed
 import coil.compose.AsyncImage
@@ -104,6 +105,7 @@ fun JumpKkingApp() {
     val lifecycle by LocalLifecycleOwner.current.lifecycle.observeAsState()
     var textToSpeech by remember { mutableStateOf<Lce<TextToSpeechInstance>>(Lce.Loading) }
     val jumpCount by mainViewModel.jumpCount.collectAsState()
+    val insertReportCardState by mainViewModel.insertReportCardState.collectAsState()
 
     LaunchedEffect(lifecycle) {
         when (lifecycle) {
@@ -122,6 +124,24 @@ fun JumpKkingApp() {
             else -> {
                 textToSpeech.content?.close()
                 textToSpeech = Lce.Loading
+            }
+        }
+    }
+
+    LaunchedEffect(insertReportCardState) {
+        with(insertReportCardState) {
+            when (this) {
+                is Lce.Error -> {
+                    val message = this.error.castToQuotaReachedExceptionAndGetMessage()
+
+                    scaffoldState.snackbarHostState.showSnackbar(
+                        message = message,
+                        duration = SnackbarDuration.Indefinite
+                    )
+                }
+                else -> {
+
+                }
             }
         }
     }
@@ -351,12 +371,39 @@ fun ExpandedBottomSheet(
     val pagedReportCards =
         mainViewModel.pagedReportCards.collectAsLazyPagingItems()
 
+    LaunchedEffect(pagedReportCards.loadState) {
+        pagedReportCards.loadState.source.forEach { _, loadState ->
+            if (loadState is LoadState.Error) {
+                with(loadState) {
+                    val message = this.error.castToQuotaReachedExceptionAndGetMessage()
+
+                    scaffoldState.snackbarHostState.showSnackbar(
+                        message = message,
+                        duration = SnackbarDuration.Indefinite
+                    )
+                }
+            }
+        }
+    }
+
     Scaffold(
         floatingActionButton = {
+            val isRefreshing = pagedReportCards.loadState.refresh is LoadState.Loading
+            val alpha = if (isRefreshing) {
+                0.4f
+            } else {
+                1.0f
+            }
+
             FloatingActionButton(
-                onClick = { pagedReportCards.refresh() }
+                onClick = {
+                    if (!isRefreshing) {
+                        pagedReportCards.refresh()
+                    }
+                }
             ) {
                 Icon(
+                    modifier = Modifier.alpha(alpha),
                     imageVector = Icons.Default.Refresh,
                     contentDescription = Icons.Default.Refresh.name
                 )
