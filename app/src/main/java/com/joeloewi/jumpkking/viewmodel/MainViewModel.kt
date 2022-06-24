@@ -11,6 +11,7 @@ import com.joeloewi.domain.usecase.ReportCardUseCase
 import com.joeloewi.domain.usecase.ValuesUseCase
 import com.joeloewi.jumpkking.state.Lce
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
@@ -45,7 +46,7 @@ class MainViewModel @Inject constructor(
     val pagedReportCards = getAllPagedReportCardUseCase().cachedIn(viewModelScope)
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             if (getCurrentUserFirebaseAuthUseCase() == null) {
                 signInAnonymouslyFirebaseAuthUseCase()
             }
