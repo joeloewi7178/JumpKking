@@ -134,10 +134,13 @@ fun JumpKkingApp() {
                 is Lce.Error -> {
                     val message = this.error.castToQuotaReachedExceptionAndGetMessage()
 
-                    scaffoldState.snackbarHostState.showSnackbar(
-                        message = message,
-                        duration = SnackbarDuration.Indefinite
-                    )
+                    with(scaffoldState.snackbarHostState) {
+                        currentSnackbarData?.dismiss()
+                        showSnackbar(
+                            message = message,
+                            duration = SnackbarDuration.Indefinite
+                        )
+                    }
                 }
                 else -> {
 
