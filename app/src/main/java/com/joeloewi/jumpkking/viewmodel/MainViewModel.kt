@@ -1,5 +1,6 @@
 package com.joeloewi.jumpkking.viewmodel
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
@@ -16,11 +17,14 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.rx3.asFlowable
+import nl.marc_apps.tts.TextToSpeech
+import nl.marc_apps.tts.TextToSpeechInstance
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
+    private val application: Application,
     getValuesUseCase: ValuesUseCase.GetValues,
     private val setJumpCountUseCase: ValuesUseCase.SetJumpCount,
     private val setReportCardUseCase: ReportCardUseCase.Insert,
@@ -36,6 +40,7 @@ class MainViewModel @Inject constructor(
         .throttleLatest(5, TimeUnit.SECONDS)
         .asFlow()
     private val _insertReportCardState = MutableStateFlow<Lce<Unit>>(Lce.Loading)
+    private val _textToSpeech = MutableStateFlow<Lce<TextToSpeechInstance>>(Lce.Loading)
     val insertReportCardState = _insertReportCardState.asStateFlow()
 
     val jumpCount = _jumpCount.stateIn(
@@ -44,6 +49,7 @@ class MainViewModel @Inject constructor(
         initialValue = Values().jumpCount
     )
     val pagedReportCards = getAllPagedReportCardUseCase().cachedIn(viewModelScope)
+    val textToSpeech = _textToSpeech.asStateFlow()
 
     init {
         viewModelScope.launch(Dispatchers.Default) {
@@ -79,13 +85,30 @@ class MainViewModel @Inject constructor(
                         Lce.Error(it)
                     }
                 )
-            }.launchIn(this)
+            }.flowOn(Dispatchers.IO).launchIn(this)
         }
     }
 
     fun setJumpCount(jumpCount: Long) {
         viewModelScope.launch(Dispatchers.Default) {
             setJumpCountUseCase(jumpCount)
+        }
+    }
+
+    fun setTextToSpeech() {
+        viewModelScope.launch(Dispatchers.Default) {
+            _textToSpeech.value.content?.close()
+            _textToSpeech.value = Lce.Loading
+            _textToSpeech.value = TextToSpeech.runCatching {
+                createOrThrow(application)
+            }.fold(
+                onSuccess = {
+                    Lce.Content(it)
+                },
+                onFailure = {
+                    Lce.Error(it)
+                }
+            )
         }
     }
 }

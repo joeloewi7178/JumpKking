@@ -21,19 +21,15 @@ class FirestorePagingSource(
             } ?: query.limit(params.loadSize.toLong())[source]).await().documents
             val nextKey = PageKey(documentsSnapshots.lastOrNull(), null)
 
-            if (params is LoadParams.Refresh) {
-                LoadResult.Page(
-                    data = documentsSnapshots,
-                    prevKey = null,
-                    nextKey = if (documentsSnapshots.isEmpty()) null else nextKey,
-                )
-            } else {
-                LoadResult.Page(
-                    data = documentsSnapshots,
-                    prevKey = null,
-                    nextKey = if (documentsSnapshots.isEmpty() && params is LoadParams.Append) null else nextKey,
-                )
-            }
+            LoadResult.Page(
+                data = documentsSnapshots,
+                prevKey = null,
+                nextKey = if (documentsSnapshots.isEmpty()) {
+                    null
+                } else {
+                    nextKey
+                },
+            )
         } catch (cause: Throwable) {
             LoadResult.Error(cause)
         }
