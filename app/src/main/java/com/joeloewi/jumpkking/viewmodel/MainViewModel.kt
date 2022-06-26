@@ -84,7 +84,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun setJumpCount(jumpCount: Long) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             setJumpCountUseCase(jumpCount)
         }
     }

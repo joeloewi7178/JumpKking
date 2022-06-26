@@ -59,7 +59,9 @@ import com.joeloewi.jumpkking.util.*
 import com.joeloewi.jumpkking.util.ListItem
 import com.joeloewi.jumpkking.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import nl.marc_apps.tts.TextToSpeech
 import nl.marc_apps.tts.TextToSpeechInstance
 import java.text.DecimalFormat
@@ -110,16 +112,18 @@ fun JumpKkingApp() {
     LaunchedEffect(lifecycle) {
         when (lifecycle) {
             Lifecycle.Event.ON_RESUME -> {
-                textToSpeech = TextToSpeech.runCatching {
-                    createOrThrow(context)
-                }.fold(
-                    onSuccess = {
-                        Lce.Content(it)
-                    },
-                    onFailure = {
-                        Lce.Error(it)
-                    }
-                )
+                textToSpeech = withContext(Dispatchers.IO) {
+                    TextToSpeech.runCatching {
+                        createOrThrow(context)
+                    }.fold(
+                        onSuccess = {
+                            Lce.Content(it)
+                        },
+                        onFailure = {
+                            Lce.Error(it)
+                        }
+                    )
+                }
             }
             else -> {
                 textToSpeech.content?.close()
@@ -286,7 +290,7 @@ fun HamsterImage(
                         onCountChange()
                         roundTripState.start()
 
-                        coroutineScope.launch {
+                        coroutineScope.launch(Dispatchers.IO) {
                             textToSpeech.content
                                 .runCatching {
                                     say(
@@ -467,8 +471,7 @@ fun ExpandedBottomSheet(
                 .fillMaxSize()
         ) {
             itemsIndexed(
-                pagedReportCards,
-                key = { _, item -> item.androidId }
+                pagedReportCards
             ) { index, item ->
                 if (item != null) {
                     val isMyReportCard =
@@ -483,8 +486,7 @@ fun ExpandedBottomSheet(
 
                     ListItem(
                         modifier = Modifier
-                            .background(backgroundColor)
-                            .animateItemPlacement(),
+                            .background(backgroundColor),
                         icon = {
                             Text(text = "${index + 1}")
                         },
