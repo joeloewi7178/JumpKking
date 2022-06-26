@@ -8,6 +8,7 @@ import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.ktx.toObject
+import com.joeloewi.data.common.FirestorePagingSource
 import com.joeloewi.data.entity.ReportCardEntity
 import com.joeloewi.data.mapper.ReportCardMapper
 import com.joeloewi.data.repository.remote.ReportCardDataSource
@@ -32,7 +33,7 @@ class ReportCardDataSourceImpl @Inject constructor(
             pageSize = 8
         ),
         pagingSourceFactory = {
-            com.firebase.ui.firestore.paging.FirestorePagingSource(
+            FirestorePagingSource(
                 firestoreReportCardCollection.orderBy(
                     "jumpCount",
                     Query.Direction.DESCENDING
