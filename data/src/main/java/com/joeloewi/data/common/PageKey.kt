@@ -7,7 +7,7 @@ class PageKey(
     private val startAfter: DocumentSnapshot?,
     private val endBefore: DocumentSnapshot?
 ) {
-    fun getPageQuery(baseQuery: Query, size: Int? = null): Query {
+    fun getPageQuery(baseQuery: Query, size: Int): Query {
         var pageQuery = baseQuery
         if (startAfter != null) {
             pageQuery = pageQuery.startAfter(startAfter)
@@ -15,9 +15,7 @@ class PageKey(
         pageQuery = if (endBefore != null) {
             pageQuery.endBefore(endBefore)
         } else {
-            size?.let {
-                pageQuery.limit(it.toLong())
-            } ?: pageQuery
+            pageQuery.limit(size.toLong())
         }
         return pageQuery
     }
@@ -27,7 +25,8 @@ class PageKey(
         if (other == null || javaClass != other.javaClass) return false
         val key = other as PageKey
         if (startAfter == null && key.startAfter == null) return true
-        return if (endBefore == null && key.endBefore == null) true else startAfter!!.id === key.startAfter!!.id &&
+        if (endBefore == null && key.endBefore == null) return true
+        return startAfter!!.id === key.startAfter!!.id &&
                 endBefore!!.id === key.endBefore!!.id
     }
 
