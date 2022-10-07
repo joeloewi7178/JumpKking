@@ -12,7 +12,8 @@ class ReportCardRepositoryImpl @Inject constructor(
 ) : ReportCardRepository {
     override fun getAllPaged(): Flow<PagingData<ReportCard>> = reportCardDataSource.getAllPaged()
 
-    override suspend fun insertReportCard(reportCard: ReportCard) = reportCardDataSource.insertReportCard(reportCard)
+    override suspend fun insertReportCard(reportCard: ReportCard) =
+        reportCardDataSource.insertReportCard(reportCard)
 
     override suspend fun getReportCard(): ReportCard? = reportCardDataSource.getReportCard()
 }

@@ -13,12 +13,14 @@ import com.joeloewi.domain.usecase.ValuesUseCase
 import com.joeloewi.jumpkking.state.Lce
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.rx3.asFlowable
+import kotlinx.coroutines.rx3.asScheduler
 import nl.marc_apps.tts.TextToSpeech
-import nl.marc_apps.tts.TextToSpeechInstance
+import okhttp3.internal.closeQuietly
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -36,23 +38,67 @@ class MainViewModel @Inject constructor(
 ) : ViewModel() {
     private val _values = getValuesUseCase()
     private val _jumpCount = _values.map { it.jumpCount }
-    private val _reportCard = _jumpCount.asFlowable(viewModelScope.coroutineContext)
+    private val _reportCard = _jumpCount
+        .flowOn(Dispatchers.IO)
+        .asFlowable(viewModelScope.coroutineContext)
+        .observeOn(Dispatchers.IO.asScheduler())
         .throttleLatest(5, TimeUnit.SECONDS)
+        .subscribeOn(Dispatchers.IO.asScheduler())
         .asFlow()
-    private val _insertReportCardState = MutableStateFlow<Lce<Unit>>(Lce.Loading)
-    private val _textToSpeech = MutableStateFlow<Lce<TextToSpeechInstance>>(Lce.Loading)
-    val insertReportCardState = _insertReportCardState.asStateFlow()
 
+    val insertReportCardState = _reportCard.map {
+        setReportCardUseCase.runCatching {
+            invoke(
+                ReportCard(
+                    androidId = androidId,
+                    jumpCount = it
+                )
+            )
+        }.fold(
+            onSuccess = {
+                Lce.Content(it)
+            },
+            onFailure = {
+                FirebaseCrashlytics.getInstance().recordException(it)
+                Lce.Error(it)
+            }
+        )
+    }.flowOn(Dispatchers.IO).stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(),
+        initialValue = Lce.Loading
+    )
     val jumpCount = _jumpCount.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(),
         initialValue = Values().jumpCount
     )
     val pagedReportCards = getAllPagedReportCardUseCase().cachedIn(viewModelScope)
-    val textToSpeech = _textToSpeech.asStateFlow()
+    val textToSpeech = callbackFlow {
+        val textToSpeechInstance = TextToSpeech.runCatching {
+            createOrThrow(application)
+        }.fold(
+            onSuccess = {
+                Lce.Content(it)
+            },
+            onFailure = {
+                Lce.Error(it)
+            }
+        )
+
+        trySend(textToSpeechInstance)
+
+        awaitClose { textToSpeechInstance.content?.closeQuietly() }
+    }.catch { cause ->
+        FirebaseCrashlytics.getInstance().recordException(cause)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(),
+        initialValue = Lce.Loading
+    )
 
     init {
-        viewModelScope.launch(Dispatchers.Default) {
+        viewModelScope.launch(Dispatchers.IO) {
             if (getCurrentUserFirebaseAuthUseCase() == null) {
                 signInAnonymouslyFirebaseAuthUseCase()
             }
@@ -66,49 +112,12 @@ class MainViewModel @Inject constructor(
             }.onFailure { cause ->
                 FirebaseCrashlytics.getInstance().recordException(cause)
             }
-
-            _reportCard.onEach {
-                _insertReportCardState.value = Lce.Loading
-                _insertReportCardState.value = setReportCardUseCase.runCatching {
-                    invoke(
-                        ReportCard(
-                            androidId = androidId,
-                            jumpCount = it
-                        )
-                    )
-                }.fold(
-                    onSuccess = {
-                        Lce.Content(it)
-                    },
-                    onFailure = {
-                        FirebaseCrashlytics.getInstance().recordException(it)
-                        Lce.Error(it)
-                    }
-                )
-            }.flowOn(Dispatchers.IO).launchIn(this)
         }
     }
 
     fun setJumpCount(jumpCount: Long) {
-        viewModelScope.launch(Dispatchers.Default) {
+        viewModelScope.launch(Dispatchers.IO) {
             setJumpCountUseCase(jumpCount)
-        }
-    }
-
-    fun setTextToSpeech() {
-        viewModelScope.launch(Dispatchers.Default) {
-            _textToSpeech.value.content?.close()
-            _textToSpeech.value = Lce.Loading
-            _textToSpeech.value = TextToSpeech.runCatching {
-                createOrThrow(application)
-            }.fold(
-                onSuccess = {
-                    Lce.Content(it)
-                },
-                onFailure = {
-                    Lce.Error(it)
-                }
-            )
         }
     }
 }

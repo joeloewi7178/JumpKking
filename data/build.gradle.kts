@@ -3,21 +3,22 @@ import com.google.protobuf.gradle.generateProtoTasks
 import com.google.protobuf.gradle.protobuf
 import com.google.protobuf.gradle.protoc
 
+@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
-    id("com.android.library")
-    id("kotlin-android")
-    id("kotlin-kapt")
-    id("com.google.protobuf")
+    id("jumpkking.android.library")
+    kotlin("kapt")
+    alias(libs.plugins.protobuf)
+    alias(libs.plugins.ksp)
     id("dagger.hilt.android.plugin")
-    id("com.google.gms.google-services")
+    alias(libs.plugins.gms.google.services)
 }
 
 android {
-    compileSdk = 32
+    namespace = "com.joeloewi.data"
 
     defaultConfig {
         minSdk = 21
-        targetSdk = 32
+        targetSdk = 33
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -32,56 +33,51 @@ android {
             )
         }
     }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-    namespace = "com.joeloewi.data"
 }
 
 dependencies {
     implementation(project(":domain"))
 
-    implementation("androidx.core:core-ktx:1.8.0")
-    implementation("androidx.appcompat:appcompat:1.4.2")
-    implementation("com.google.android.material:material:1.6.1")
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.3")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.android.material)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.espresso)
 
     //protobuf
-    implementation("com.google.protobuf:protobuf-javalite:${Versions.protobuf}")
+    implementation(libs.protobuf.kotlin.lite)
 
     //datastore
-    implementation("androidx.datastore:datastore:1.0.0")
+    implementation(libs.androidx.dataStore.core)
 
     //hilt
-    implementation("com.google.dagger:hilt-android:${Versions.hilt}")
-    kapt("com.google.dagger:hilt-android-compiler:${Versions.hilt}")
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
 
-    implementation("androidx.paging:paging-common-ktx:${Versions.paging}")
+    implementation(libs.androidx.paging.common.ktx)
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.2")
+    implementation(libs.kotlinx.coroutines.play.services)
 
     //firebase
-    implementation(platform("com.google.firebase:firebase-bom:30.0.1"))
-    implementation("com.google.firebase:firebase-firestore-ktx")
-    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.firestore.ktx)
+    implementation(libs.firebase.auth.ktx)
 }
 
 protobuf {
 
     protoc {
-        artifact = "com.google.protobuf:protoc:${Versions.protobuf}"
+        artifact = libs.protobuf.protoc.get().toString()
     }
 
     generateProtoTasks {
         all().forEach { task ->
             task.builtins {
-                create("java") {
+                val java by registering {
+                    option("lite")
+                }
+                val kotlin by registering {
                     option("lite")
                 }
             }
