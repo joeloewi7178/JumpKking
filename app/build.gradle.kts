@@ -25,8 +25,17 @@ android {
         }
     }
 
+    signingConfigs {
+        val release by creating {
+            keyAlias = System.getenv("ALIAS")
+            keyPassword = System.getenv("KEY_PASSWORD")
+            storeFile = file("../jump_kking_key_store.jks")
+            storePassword = System.getenv("KEY_STORE_PASSWORD")
+        }
+    }
+
     buildTypes {
-        debug {
+        val debug by getting {
             isMinifyEnabled = false
             isDebuggable = true
             isShrinkResources = false
@@ -35,7 +44,8 @@ android {
                 "proguard-rules.pro"
             )
         }
-        release {
+
+        val release by getting {
             isMinifyEnabled = true
             isDebuggable = false
             isShrinkResources = true
@@ -44,7 +54,16 @@ android {
                 "proguard-rules.pro"
             )
         }
+
+        val benchmark by creating {
+            initWith(release)
+            signingConfig = signingConfigs.getByName("release")
+            matchingFallbacks += listOf("release")
+            isDebuggable = false
+            proguardFiles("baseline-profiles-rules.pro")
+        }
     }
+
     packagingOptions {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -64,7 +83,7 @@ dependencies {
     implementation(libs.androidx.appcompat)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
-    androidTestImplementation(libs.androidx.test.espresso)
+    androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(libs.androidx.compose.ui.test)
 
     implementation(libs.androidx.lifecycle.runtimeCompose)
@@ -141,6 +160,8 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-rx3
     implementation(libs.kotlinx.coroutines.rx3)
+
+    implementation(libs.androidx.profileinstaller)
 }
 
 kapt {
