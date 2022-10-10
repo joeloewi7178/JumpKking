@@ -48,9 +48,9 @@ jobs:
       - name: Generate baseline profile
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 31
+          api-level: 30
           avd-name: baselineProfGenerator
-          target: default
+          target: aosp_atd
           script: ./gradlew :benchmark:connectedBenchmarkAndroidTest -P android.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=BaselineProfile
         
       - name: Move generated baseline profile to target folder
