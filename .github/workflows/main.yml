@@ -46,7 +46,7 @@ jobs:
           encodedString: ${{ secrets.SIGNING_KEY }}
           
       - name: Generate baseline profile
-        run: ./gradlew :benchmark:pixel2Api31BenchmarkAndroidTest -P android.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=BaselineProfile -P android.testoptions.manageddevices.emulator.gpu="swiftshader_indirect"
+        run: ./gradlew :benchmark:pixel2Api31BenchmarkAndroidTest -P android.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=BaselineProfile -P android.testoptions.manageddevices.emulator.gpu="swiftshader_indirect" -P android.sdk.channel=3
         
       - name: Move generated baseline profile to target folder
         run: mv -f ./benchmark/build/outputs/managed_device_android_test_additional_output/pixel2Api31/BaselineProfileGenerator_generate-baseline-prof.txt ./app/src/main/baseline-prof.txt
