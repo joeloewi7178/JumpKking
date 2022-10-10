@@ -1,7 +1,6 @@
 package com.joeloewi.data.repository.remote
 
 import androidx.paging.PagingData
-import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.Source
 import com.joeloewi.domain.entity.ReportCard
 import kotlinx.coroutines.flow.Flow

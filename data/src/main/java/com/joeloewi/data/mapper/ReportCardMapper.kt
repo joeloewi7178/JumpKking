@@ -4,7 +4,7 @@ import com.joeloewi.data.entity.ReportCardEntity
 import com.joeloewi.data.mapper.base.Mapper
 import com.joeloewi.domain.entity.ReportCard
 
-class ReportCardMapper: Mapper<ReportCard, ReportCardEntity> {
+class ReportCardMapper : Mapper<ReportCard, ReportCardEntity> {
     override fun toData(domainEntity: ReportCard): ReportCardEntity = ReportCardEntity(
         androidId = domainEntity.androidId,
         jumpCount = domainEntity.jumpCount,

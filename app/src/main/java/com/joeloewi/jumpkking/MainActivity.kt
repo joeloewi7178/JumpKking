@@ -4,66 +4,72 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.*
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.material3.Card
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SmallTopAppBar
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.paging.LoadState
-import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemsIndexed
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.HorizontalPagerIndicator
+import com.google.accompanist.pager.rememberPagerState
 import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.fade
 import com.google.accompanist.placeholder.placeholder
 import com.google.android.material.color.DynamicColors
+import com.joeloewi.jumpkking.state.Friend
 import com.joeloewi.jumpkking.state.Lce
+import com.joeloewi.jumpkking.state.MainState
+import com.joeloewi.jumpkking.state.rememberMainState
 import com.joeloewi.jumpkking.ui.theme.ContentAlpha
 import com.joeloewi.jumpkking.ui.theme.JumpKkingTheme
 import com.joeloewi.jumpkking.util.*
-import com.joeloewi.jumpkking.util.ListItem
-import com.joeloewi.jumpkking.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import nl.marc_apps.tts.TextToSpeechInstance
 import java.text.DecimalFormat
 
+@ExperimentalComposeUiApi
+@ExperimentalPagerApi
+@ExperimentalLifecycleComposeApi
+@ExperimentalLayoutApi
 @ExperimentalFoundationApi
 @ExperimentalAnimationApi
 @ExperimentalMaterialApi
@@ -71,7 +77,6 @@ import java.text.DecimalFormat
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
 
         installSplashScreen()
@@ -79,7 +84,9 @@ class MainActivity : AppCompatActivity() {
         DynamicColors.applyToActivityIfAvailable(this)
 
         setContent {
-            JumpKkingTheme {
+            JumpKkingTheme(
+                window = window
+            ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -93,29 +100,23 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
+@ExperimentalComposeUiApi
+@ExperimentalPagerApi
+@ExperimentalLifecycleComposeApi
+@ExperimentalLayoutApi
 @ExperimentalMaterialApi
 @ExperimentalAnimationApi
 @ExperimentalMaterial3Api
 @ExperimentalFoundationApi
 @Composable
-fun JumpKkingApp() {
-    val mainViewModel: MainViewModel = hiltViewModel()
+fun JumpKkingApp(
+    mainState: MainState = rememberMainState(mainViewModel = hiltViewModel())
+) {
     val scaffoldState = rememberBottomSheetScaffoldState()
-    val lifecycle by LocalLifecycleOwner.current.lifecycle.observeAsState()
-    val textToSpeech by mainViewModel.textToSpeech.collectAsState()
-    val jumpCount by mainViewModel.jumpCount.collectAsState()
-    val insertReportCardState by mainViewModel.insertReportCardState.collectAsState()
-
-    LaunchedEffect(lifecycle) {
-        when (lifecycle) {
-            Lifecycle.Event.ON_RESUME -> {
-                mainViewModel.setTextToSpeech()
-            }
-            else -> {
-
-            }
-        }
-    }
+    val textToSpeech = mainState.textToSpeech
+    val jumpCount = mainState.jumpCount
+    val insertReportCardState = mainState.insertReportCardState
+    val pagerState = rememberPagerState()
 
     LaunchedEffect(insertReportCardState) {
         with(insertReportCardState) {
@@ -127,7 +128,7 @@ fun JumpKkingApp() {
                         currentSnackbarData?.dismiss()
                         showSnackbar(
                             message = message,
-                            duration = SnackbarDuration.Indefinite
+                            duration = androidx.compose.material.SnackbarDuration.Indefinite
                         )
                     }
                 }
@@ -138,29 +139,32 @@ fun JumpKkingApp() {
         }
     }
 
-    Column {
-        BottomSheetScaffold(
-            modifier = Modifier.weight(1f),
-            topBar = {
-                Spacer(
-                    modifier = Modifier.padding(
-                        WindowInsets.statusBars.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
-                            .asPaddingValues()
-                    )
-                )
-            },
-            sheetShape = MaterialTheme.shapes.large.copy(
-                bottomStart = CornerSize(0.dp),
-                bottomEnd = CornerSize(0.dp)
-            ),
-            sheetBackgroundColor = MaterialTheme.colorScheme.surface,
-            sheetContentColor = contentColorFor(backgroundColor = MaterialTheme.colorScheme.surface),
-            backgroundColor = MaterialTheme.colorScheme.background,
-            contentColor = contentColorFor(backgroundColor = MaterialTheme.colorScheme.background),
-            scaffoldState = scaffoldState,
-            sheetPeekHeight = 64.dp,
-            sheetContent = {
-                when (scaffoldState.bottomSheetState.currentValue) {
+    BottomSheetScaffold(
+        sheetShape = MaterialTheme.shapes.large.copy(
+            bottomStart = CornerSize(0.dp),
+            bottomEnd = CornerSize(0.dp)
+        ),
+        sheetBackgroundColor = MaterialTheme.colorScheme.surface,
+        sheetContentColor = contentColorFor(backgroundColor = MaterialTheme.colorScheme.surface),
+        backgroundColor = MaterialTheme.colorScheme.background,
+        contentColor = contentColorFor(backgroundColor = MaterialTheme.colorScheme.background),
+        scaffoldState = scaffoldState,
+        sheetPeekHeight = WindowInsets.navigationBars.asPaddingValues()
+            .calculateBottomPadding() + 64.dp,
+        sheetContent = {
+            val currentBottomSheetValue by remember(scaffoldState.bottomSheetState) {
+                derivedStateOf {
+                    scaffoldState.bottomSheetState.currentValue
+                }
+            }
+
+            AnimatedContent(
+                targetState = currentBottomSheetValue.ordinal,
+                transitionSpec = {
+                    fadeIn() with fadeOut()
+                }
+            ) { targetState ->
+                when (BottomSheetValue.values()[targetState]) {
                     BottomSheetValue.Collapsed -> {
                         CollapsedBottomSheet(
                             scaffoldState = scaffoldState
@@ -169,52 +173,77 @@ fun JumpKkingApp() {
                     BottomSheetValue.Expanded -> {
                         ExpandedBottomSheet(
                             scaffoldState = scaffoldState,
-                            mainViewModel = mainViewModel
-                        )
-                    }
-                }
-            }
-        ) { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Card {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize(0.95f),
-                        verticalArrangement = Arrangement.SpaceBetween,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .padding(top = 32.dp)
-                                .fillMaxWidth()
-                        ) {
-                            AnimatedCount(count = jumpCount)
-                        }
-
-                        HamsterImage(
-                            textToSpeech = textToSpeech,
-                            onCountChange = {
-                                mainViewModel.setJumpCount(jumpCount + 1)
-                            }
+                            mainState = mainState
                         )
                     }
                 }
             }
         }
-        Surface(
+    ) { innerPadding ->
+        Column(
             modifier = Modifier
-                .windowInsetsBottomHeight(WindowInsets.navigationBars)
-                .fillMaxWidth(),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 3.dp
+                .padding(innerPadding)
+                .consumedWindowInsets(innerPadding)
+                .padding(
+                    WindowInsets.safeDrawing
+                        .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
+                        .asPaddingValues()
+                )
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Row(
+                modifier = Modifier
+                    .padding(vertical = 32.dp)
+                    .fillMaxWidth()
+            ) {
+                AnimatedCount(count = jumpCount)
+            }
 
+            Row(
+                modifier = Modifier.weight(1f),
+            ) {
+                HorizontalPager(
+                    state = pagerState,
+                    count = mainState.friends.size,
+                    key = { Friend.values()[it].name }
+                ) { page ->
+                    when (Friend.values()[page]) {
+                        Friend.Hamster -> {
+                            val configuration = LocalConfiguration.current
+                            val maxOffset by remember(configuration) {
+                                derivedStateOf {
+                                    (configuration.screenHeightDp * 0.3).dp
+                                }
+                            }
+                            val roundTripState = rememberRoundTripState(maxOffset = -maxOffset)
+
+                            HamsterCard(
+                                textToSpeech = textToSpeech,
+                                roundTripState = roundTripState,
+                                onCountChange = {
+                                    mainState.setJumpCount(jumpCount + 1)
+                                }
+                            )
+                        }
+                        Friend.Cat -> {
+                            CatCard(
+                                textToSpeech = textToSpeech,
+                                onCountChange = {
+                                    mainState.setJumpCount(jumpCount + 1)
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.padding(vertical = 8.dp),
+            ) {
+                HorizontalPagerIndicator(pagerState = pagerState)
+            }
         }
     }
 }
@@ -248,68 +277,184 @@ fun AnimatedCount(
     }
 }
 
+@ExperimentalLifecycleComposeApi
 @Composable
-fun HamsterImage(
+fun HamsterCard(
     textToSpeech: Lce<TextToSpeechInstance>,
+    roundTripState: RoundTripState,
     onCountChange: () -> Unit
 ) {
-    val kking = remember { "끼잉!" }
-    val configuration = LocalConfiguration.current
-    val maxOffset = (configuration.screenHeightDp * 0.3).dp
-    val coroutineScope = rememberCoroutineScope()
-    val roundTripState = rememberRoundTripState(maxOffset = -maxOffset)
-    val roundTripValue by roundTripState.roundTripValue
-    val roundTripAnimationOffset by animateRoundTripByDpAsState(roundTripState = roundTripState)
-
-    when (textToSpeech) {
-        is Lce.Content -> {
-            Image(
-                modifier = Modifier
-                    .fillMaxSize(0.4f)
-                    .absoluteOffset(y = roundTripAnimationOffset)
-                    .clickable(
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
-                        enabled = roundTripValue.isIdle
-                    ) {
-                        onCountChange()
-                        roundTripState.start()
-
-                        coroutineScope.launch(Dispatchers.IO) {
-                            textToSpeech.content
-                                .runCatching {
-                                    say(
-                                        text = kking,
-                                        clearQueue = true
-                                    )
-                                }
-                                .onFailure { cause ->
-                                    cause.printStackTrace()
-                                }
-                        }
-                    },
-                painter = when (roundTripValue) {
-                    RoundTripValue.Idle -> {
-                        painterResource(id = R.drawable.idle_hamster)
-                    }
-                    else -> {
-                        painterResource(id = R.drawable.jumping_hamster)
-                    }
-                },
-                contentDescription = null
-            )
-        }
-        is Lce.Error -> {
-
-        }
-        Lce.Loading -> {
-            CircularProgressIndicator(
-                modifier = Modifier.padding(16.dp)
-            )
+    Card(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp),
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row {
+                HamsterImage(
+                    textToSpeech = textToSpeech,
+                    roundTripState = roundTripState,
+                    onCountChange = onCountChange
+                )
+            }
         }
     }
 }
 
+@ExperimentalAnimationApi
+@ExperimentalComposeUiApi
+@ExperimentalLifecycleComposeApi
+@Composable
+fun CatCard(
+    textToSpeech: Lce<TextToSpeechInstance>,
+    onCountChange: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp),
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row {
+                CatImage(
+                    textToSpeech = textToSpeech,
+                    onCountChange = onCountChange
+                )
+            }
+        }
+    }
+}
+
+@ExperimentalAnimationApi
+@ExperimentalComposeUiApi
+@Composable
+fun CatImage(
+    textToSpeech: Lce<TextToSpeechInstance>,
+    onCountChange: () -> Unit
+) {
+    val meowing = remember { "뫼애앵" }
+    val coroutineScope = rememberCoroutineScope()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val context = LocalContext.current
+    val (scale, onScaleChange) = remember { mutableStateOf(1.0f) }
+    val animateScale by animateFloatAsState(targetValue = scale)
+    val meowingCat = remember(context) {
+        ImageRequest.Builder(context)
+            .data(R.drawable.mysterious_cat)
+            .lifecycle(lifecycleOwner)
+            .build()
+    }
+
+    AsyncImage(
+        modifier = Modifier
+            .scale(animateScale)
+            .animateContentSize()
+            .fillMaxSize(0.4f)
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() },
+                enabled = animateScale == 1.0f && textToSpeech is Lce.Content
+            ) {
+                coroutineScope.launch(Dispatchers.Main) {
+                    onScaleChange(1.2f)
+                    delay(250)
+                    onScaleChange(1.0f)
+                }
+
+                onCountChange()
+
+                coroutineScope.launch(Dispatchers.IO) {
+                    textToSpeech.content
+                        ?.runCatching {
+                            say(
+                                text = meowing,
+                                clearQueue = true
+                            )
+                        }
+                        ?.onFailure { cause ->
+                            cause.printStackTrace()
+                        }
+                }
+            },
+        model = meowingCat,
+        contentDescription = null
+    )
+}
+
+@Composable
+fun HamsterImage(
+    textToSpeech: Lce<TextToSpeechInstance>,
+    roundTripState: RoundTripState,
+    onCountChange: () -> Unit
+) {
+    val kking = remember { "끼잉!" }
+    val coroutineScope = rememberCoroutineScope()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val context = LocalContext.current
+    val roundTripValue = roundTripState.roundTripValue
+    val roundTripAnimationOffset by animateRoundTripByDpAsState(roundTripState = roundTripState)
+    val idleHamster = remember(context) {
+        ImageRequest.Builder(context)
+            .data(R.drawable.idle_hamster)
+            .lifecycle(lifecycleOwner)
+            .build()
+    }
+    val jumpingHamster = remember(context) {
+        ImageRequest.Builder(context)
+            .data(R.drawable.jumping_hamster)
+            .lifecycle(lifecycleOwner)
+            .build()
+    }
+
+    AsyncImage(
+        modifier = Modifier
+            .fillMaxSize(0.4f)
+            .absoluteOffset(y = roundTripAnimationOffset)
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() },
+                enabled = roundTripValue.isIdle && textToSpeech is Lce.Content
+            ) {
+                onCountChange()
+
+                coroutineScope.launch(Dispatchers.IO) {
+                    withContext(Dispatchers.Main) {
+                        roundTripState.start()
+                    }
+
+                    textToSpeech.content
+                        ?.runCatching {
+                            say(
+                                text = kking,
+                                clearQueue = true
+                            )
+                        }
+                        ?.onFailure { cause ->
+                            cause.printStackTrace()
+                        }
+                }
+            },
+        model = when (roundTripValue) {
+            RoundTripValue.Idle -> {
+                idleHamster
+            }
+            else -> {
+                jumpingHamster
+            }
+        },
+        contentDescription = null
+    )
+}
+
+@ExperimentalLayoutApi
 @ExperimentalMaterialApi
 @ExperimentalMaterial3Api
 @Composable
@@ -317,51 +462,63 @@ fun CollapsedBottomSheet(
     scaffoldState: BottomSheetScaffoldState
 ) {
     val coroutineScope = rememberCoroutineScope()
+    val isPlaceholderVisible by remember(scaffoldState.bottomSheetState) {
+        derivedStateOf {
+            scaffoldState.bottomSheetState.targetValue == BottomSheetValue.Expanded
+        }
+    }
 
     Scaffold(
         topBar = {
-            Column {
-                SmallTopAppBar(
-                    title = {
-                        Text(text = "다 같이 점프해요.")
-                    },
-                    actions = {
-                        IconButton(
-                            onClick = {
-                                coroutineScope.launch {
-                                    scaffoldState.bottomSheetState.expand()
-                                }
+            TopAppBar(
+                title = {
+                    Text(text = "다 같이 점프해요.")
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            coroutineScope.launch {
+                                scaffoldState.bottomSheetState.expand()
                             }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ExpandLess,
-                                contentDescription = Icons.Default.ExpandLess.name
-                            )
                         }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ExpandLess,
+                            contentDescription = Icons.Default.ExpandLess.name
+                        )
                     }
-                )
-            }
+                },
+                windowInsets = WindowInsets.navigationBars
+            )
         }
     ) { innerPadding ->
-        Box(
+        LazyColumn(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-        )
+        ) {
+            items(
+                items = (1..10).toList()
+            ) {
+                ReportCardListItemPlaceHolder(
+                    isPlaceholderVisible = isPlaceholderVisible
+                )
+            }
+        }
     }
 }
 
+@ExperimentalLifecycleComposeApi
 @ExperimentalFoundationApi
 @ExperimentalMaterialApi
 @ExperimentalMaterial3Api
 @Composable
 fun ExpandedBottomSheet(
     scaffoldState: BottomSheetScaffoldState,
-    mainViewModel: MainViewModel
+    mainState: MainState,
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val pagedReportCards =
-        mainViewModel.pagedReportCards.collectAsLazyPagingItems()
+    val pagedReportCards = mainState.pagedReportCards
 
     LaunchedEffect(pagedReportCards.loadState) {
         val loadStates = mutableListOf<LoadState>()
@@ -380,7 +537,7 @@ fun ExpandedBottomSheet(
                     currentSnackbarData?.dismiss()
                     showSnackbar(
                         message = message,
-                        duration = SnackbarDuration.Indefinite
+                        duration = androidx.compose.material.SnackbarDuration.Indefinite
                     )
                 }
             }
@@ -390,10 +547,14 @@ fun ExpandedBottomSheet(
     Scaffold(
         floatingActionButton = {
             val isRefreshing = pagedReportCards.loadState.refresh is LoadState.Loading
-            val alpha = if (isRefreshing) {
-                0.4f
-            } else {
-                1.0f
+            val alpha by remember(isRefreshing) {
+                derivedStateOf {
+                    if (isRefreshing) {
+                        0.4f
+                    } else {
+                        1.0f
+                    }
+                }
             }
 
             FloatingActionButton(
@@ -411,45 +572,40 @@ fun ExpandedBottomSheet(
             }
         },
         topBar = {
-            Column {
-                SmallTopAppBar(
-                    modifier = Modifier.padding(
-                        WindowInsets.statusBars.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
-                            .asPaddingValues()
-                    ),
-                    navigationIcon = {
-                        IconButton(
-                            onClick = { },
-                            enabled = false
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Leaderboard,
-                                contentDescription = Icons.Default.Leaderboard.name
-                            )
-                        }
-                    },
-                    title = {
-                        Text(text = "상위 100명 랭킹")
-                    },
-                    actions = {
-                        IconButton(
-                            onClick = {
-                                coroutineScope.launch {
-                                    scaffoldState.bottomSheetState.collapse()
-                                }
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ExpandMore,
-                                contentDescription = Icons.Default.Expand.name
-                            )
-                        }
+            TopAppBar(
+                windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
+                navigationIcon = {
+                    IconButton(
+                        onClick = { },
+                        enabled = false
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Leaderboard,
+                            contentDescription = Icons.Default.Leaderboard.name
+                        )
                     }
-                )
-            }
-        }
+                },
+                title = {
+                    Text(text = "상위 100명 랭킹")
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            coroutineScope.launch {
+                                scaffoldState.bottomSheetState.collapse()
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ExpandMore,
+                            contentDescription = Icons.Default.Expand.name
+                        )
+                    }
+                }
+            )
+        },
+        contentWindowInsets = WindowInsets.safeDrawing
     ) { innerPadding ->
-
         LazyColumn(
             modifier = Modifier
                 .padding(innerPadding)
@@ -461,7 +617,7 @@ fun ExpandedBottomSheet(
             ) { index, item ->
                 if (item != null) {
                     val isMyReportCard =
-                        item.androidId == mainViewModel.androidId
+                        item.androidId == mainState.androidId
 
                     val backgroundColor =
                         if (isMyReportCard) {
@@ -471,16 +627,17 @@ fun ExpandedBottomSheet(
                         }
 
                     ListItem(
-                        modifier = Modifier
-                            .background(backgroundColor)
-                            .animateItemPlacement(),
-                        icon = {
+                        modifier = Modifier.animateItemPlacement(),
+                        colors = ListItemDefaults.colors(
+                            containerColor = backgroundColor
+                        ),
+                        leadingContent = {
                             Text(text = "${index + 1}")
                         },
-                        text = {
+                        headlineText = {
                             Text(text = DecimalFormat.getInstance().format(item.jumpCount))
                         },
-                        secondaryText = if (isMyReportCard) {
+                        supportingText = if (isMyReportCard) {
                             {
                                 Text(
                                     modifier = Modifier.alpha(ContentAlpha.medium),
@@ -492,69 +649,65 @@ fun ExpandedBottomSheet(
                         }
                     )
                 } else {
-                    ListItem(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        icon = {
-                            AsyncImage(
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .placeholder(
-                                        visible = true,
-                                        color = MaterialTheme.colorScheme.outline,
-                                        highlight = PlaceholderHighlight.fade(
-                                            highlightColor = MaterialTheme.colorScheme.background,
-                                        )
-                                    ),
-                                model = ImageRequest.Builder(
-                                    LocalContext.current
-                                ).build(),
-                                contentDescription = null
-                            )
-                        },
-                        trailing = {
-                            Checkbox(
-                                modifier = Modifier
-                                    .placeholder(
-                                        visible = true,
-                                        color = MaterialTheme.colorScheme.outline,
-                                        highlight = PlaceholderHighlight.fade(
-                                            highlightColor = MaterialTheme.colorScheme.background,
-                                        )
-                                    ),
-                                checked = false,
-                                onCheckedChange = null
-                            )
-                        },
-                        text = {
-                            Text(
-                                modifier = Modifier
-                                    .placeholder(
-                                        visible = true,
-                                        color = MaterialTheme.colorScheme.outline,
-                                        highlight = PlaceholderHighlight.fade(
-                                            highlightColor = MaterialTheme.colorScheme.background,
-                                        )
-                                    ),
-                                text = ""
-                            )
-                        },
-                        secondaryText = {
-                            Text(
-                                modifier = Modifier
-                                    .placeholder(
-                                        visible = true,
-                                        color = MaterialTheme.colorScheme.outline,
-                                        highlight = PlaceholderHighlight.fade(
-                                            highlightColor = MaterialTheme.colorScheme.background,
-                                        )
-                                    ),
-                                text = ""
-                            )
-                        }
-                    )
+                    ReportCardListItemPlaceHolder()
                 }
             }
         }
     }
+}
+
+@ExperimentalMaterial3Api
+@Composable
+private fun ReportCardListItemPlaceHolder(
+    isPlaceholderVisible: Boolean = true
+) {
+    ListItem(
+        modifier = Modifier
+            .fillMaxWidth(),
+        leadingContent = {
+            AsyncImage(
+                modifier = Modifier
+                    .size(24.dp)
+                    .placeholder(
+                        visible = isPlaceholderVisible,
+                        color = MaterialTheme.colorScheme.outline,
+                        highlight = PlaceholderHighlight.fade(
+                            highlightColor = MaterialTheme.colorScheme.background,
+                        )
+                    ),
+                model = ImageRequest.Builder(
+                    LocalContext.current
+                ).build(),
+                contentDescription = null
+            )
+        },
+        headlineText = {
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .placeholder(
+                        visible = isPlaceholderVisible,
+                        color = MaterialTheme.colorScheme.outline,
+                        highlight = PlaceholderHighlight.fade(
+                            highlightColor = MaterialTheme.colorScheme.background,
+                        )
+                    ),
+                text = ""
+            )
+        },
+        supportingText = {
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .placeholder(
+                        visible = isPlaceholderVisible,
+                        color = MaterialTheme.colorScheme.outline,
+                        highlight = PlaceholderHighlight.fade(
+                            highlightColor = MaterialTheme.colorScheme.background,
+                        )
+                    ),
+                text = ""
+            )
+        }
+    )
 }

@@ -1,22 +1,23 @@
+@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
-    id("com.android.application")
-    id("kotlin-android")
-    id("kotlin-kapt")
+    id("jumpkking.android.application")
+    id("jumpkking.android.application.compose")
+    kotlin("kapt")
+    alias(libs.plugins.gms.google.services)
     id("kotlin-parcelize")
     id("dagger.hilt.android.plugin")
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 android {
-    compileSdk = 32
+    namespace = "com.joeloewi.jumpkking"
 
     defaultConfig {
         applicationId = "com.joeloewi.jumpkking"
         minSdk = 21
-        targetSdk = 32
-        versionCode = 8
-        versionName = "1.0.8"
+        targetSdk = 33
+        versionCode = 9
+        versionName = "1.0.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -24,138 +25,143 @@ android {
         }
     }
 
+    signingConfigs {
+        val release by creating {
+            keyAlias = System.getenv("ALIAS")
+            keyPassword = System.getenv("KEY_PASSWORD")
+            storeFile = file("../jump_kking_key_store.jks")
+            storePassword = System.getenv("KEY_STORE_PASSWORD")
+        }
+    }
+
     buildTypes {
-        debug {
+        val debug by getting {
             isMinifyEnabled = false
             isDebuggable = true
             isShrinkResources = false
             proguardFiles(
-                    getDefaultProguardFile("proguard-android-optimize.txt"),
-                    "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
             )
         }
-        release {
+
+        val release by getting {
             isMinifyEnabled = true
             isDebuggable = false
             isShrinkResources = true
             proguardFiles(
-                    getDefaultProguardFile("proguard-android-optimize.txt"),
-                    "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
             )
         }
+
+        val benchmark by creating {
+            initWith(release)
+            signingConfig = signingConfigs.getByName("release")
+            matchingFallbacks += listOf("release")
+            isDebuggable = false
+            proguardFiles("baseline-profiles-rules.pro")
+        }
     }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-    buildFeatures {
-        compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = Versions.compose
-    }
+
     packagingOptions {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
-    namespace = "com.joeloewi.jumpkking"
 }
 
 dependencies {
     implementation(project(":data"))
     implementation(project(":domain"))
 
-    implementation("androidx.core:core-ktx:1.8.0")
-    implementation("com.google.android.material:material:1.7.0-alpha02")
-    implementation("androidx.compose.material3:material3:${Versions.material3}")
-    implementation("androidx.compose.material3:material3-window-size-class:${Versions.material3}")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:${Versions.lifecycle}")
-    implementation("androidx.activity:activity-compose:1.4.0")
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.3")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:${Versions.compose}")
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.android.material)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material3.windowSizeClass)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.appcompat)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.espresso.core)
+    androidTestImplementation(libs.androidx.compose.ui.test)
 
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:${Versions.lifecycle}")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:${Versions.lifecycle}")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:${Versions.lifecycle}")
+    implementation(libs.androidx.lifecycle.runtimeCompose)
+    implementation(libs.androidx.lifecycle.viewModelCompose)
+
+    implementation(libs.androidx.savedstate.ktx)
+
+    implementation(libs.androidx.hilt.navigation.compose)
 
     //hilt
-    implementation("com.google.dagger:hilt-android:${Versions.hilt}")
-    implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
-    kapt("com.google.dagger:hilt-android-compiler:${Versions.hilt}")
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
 
     //hilt-extension
-    implementation("androidx.hilt:hilt-work:${Versions.hiltExtension}")
-    kapt("androidx.hilt:hilt-compiler:${Versions.hiltExtension}")
+    implementation(libs.hilt.ext.work)
+    kapt(libs.hilt.ext.compiler)
 
     //compose
-    implementation("androidx.compose.ui:ui:${Versions.compose}")
-    implementation("androidx.compose.foundation:foundation:${Versions.compose}")
-    implementation("androidx.navigation:navigation-compose:2.4.2")
-    implementation("androidx.compose.runtime:runtime:${Versions.compose}")
-    implementation("androidx.compose.ui:ui-tooling-preview:${Versions.compose}")
-    implementation("androidx.compose.runtime:runtime-livedata:${Versions.compose}")
-    implementation("androidx.compose.material:material-icons-extended:${Versions.compose}")
-    debugImplementation("androidx.compose.ui:ui-tooling:${Versions.compose}")
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.compose.runtime)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.runtime.livedata)
+    implementation(libs.androidx.compose.material.iconsExtended)
+    debugImplementation(libs.androidx.compose.ui.tooling)
 
     //accompanist
-    implementation("com.google.accompanist:accompanist-permissions:${Versions.accompanist}")
-    implementation("com.google.accompanist:accompanist-pager:${Versions.accompanist}")
-    implementation("com.google.accompanist:accompanist-placeholder:${Versions.accompanist}")
-    implementation("com.google.accompanist:accompanist-systemuicontroller:${Versions.accompanist}")
-    implementation("com.google.accompanist:accompanist-webview:${Versions.accompanist}")
-    implementation("com.google.accompanist:accompanist-pager-indicators:${Versions.accompanist}")
-    implementation("com.google.accompanist:accompanist-swiperefresh:${Versions.accompanist}")
+    implementation(libs.accompanist.permissions)
+    implementation(libs.accompanist.pager)
+    implementation(libs.accompanist.placeholder)
+    implementation(libs.accompanist.systemuicontroller)
+    implementation(libs.accompanist.webview)
+    implementation(libs.accompanist.pager.indicators)
+    implementation(libs.accompanist.swiperefresh)
 
     //work
-    implementation("androidx.work:work-runtime-ktx:${Versions.work}")
+    implementation(libs.androidx.work.ktx)
 
     //start up
-    implementation("androidx.startup:startup-runtime:${Versions.startup}")
+    implementation(libs.androidx.startup)
 
     //splashscreen
-    implementation("androidx.core:core-splashscreen:1.0.0-rc01")
+    implementation(libs.androidx.core.splashscreen)
 
     //image load
-    implementation("io.coil-kt:coil-compose:${Versions.coil}")
+    implementation(libs.coil.kt.compose)
 
     //webkit
-    implementation("androidx.webkit:webkit:1.4.0")
+    implementation(libs.androidx.webkit)
 
     //paging
-    implementation("androidx.paging:paging-compose:1.0.0-alpha15")
-
-    //java.time back porting
-    implementation("com.jakewharton.threetenabp:threetenabp:1.4.0")
+    implementation(libs.androidx.paging.compose)
 
     // https://mvnrepository.com/artifact/com.google.android.material/compose-theme-adapter-3
-    implementation("com.google.android.material:compose-theme-adapter-3:1.0.11")
+    implementation(libs.material.compose.theme.adapter3)
 
     //html parsing
-    implementation("org.jsoup:jsoup:1.14.3")
+    implementation(libs.jsoup)
 
     //in-app update
-    implementation("com.google.android.play:core:1.10.3")
-    implementation("com.google.android.play:core-ktx:1.8.1")
+    implementation(libs.android.play.core.ktx)
 
-    //firebase
-    implementation(platform("com.google.firebase:firebase-bom:30.0.1"))
-    implementation("com.google.firebase:firebase-analytics-ktx")
-    implementation("com.google.firebase:firebase-crashlytics-ktx")
-    implementation("com.google.firebase:firebase-firestore-ktx")
+    ///firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics.ktx)
+    implementation(libs.firebase.crashlytics.ktx)
+    implementation(libs.firebase.firestore.ktx)
 
-    implementation("nl.marc-apps:tts:1.0.0")
+    implementation(libs.tts)
 
-    implementation("io.reactivex.rxjava3:rxandroid:3.0.0")
-    implementation("io.reactivex.rxjava3:rxjava:3.1.5")
+    implementation(libs.rxjava3.rxandroid)
+    implementation(libs.rxjava3.rxkotlin)
+    implementation(libs.rxjava3.rxjava)
 
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-rx3
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-rx3:1.6.2")
+    implementation(libs.kotlinx.coroutines.rx3)
+
+    implementation(libs.androidx.profileinstaller)
 }
 
 kapt {

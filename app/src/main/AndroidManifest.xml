@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.joeloewi.jumpkking">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <application
         android:name=".JumpKkingApplication"
@@ -14,6 +13,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppSplash"
         tools:targetApi="31">
+        <profileable
+            android:shell="true"
+            tools:targetApi="29" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -4,15 +4,9 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.runtime.*
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-
-@Stable
-class RoundTripStateImpl(
-    override val maxOffset: Dp = (-150).dp,
-    override val minOffset: Dp = 0.dp,
-) : RoundTripState {
-    override val roundTripValue = mutableStateOf<RoundTripValue>(RoundTripValue.Idle)
-    override val targetOffset = mutableStateOf(minOffset)
-}
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 @Stable
 sealed class RoundTripValue {
@@ -26,31 +20,51 @@ sealed class RoundTripValue {
     object TurningBack : RoundTripValue()
 }
 
-interface RoundTripState {
-    val maxOffset: Dp
-    val minOffset: Dp
-    val roundTripValue: MutableState<RoundTripValue>
-    val targetOffset: MutableState<Dp>
+@Stable
+class RoundTripState(
+    private val maxOffset: Dp,
+    private val minOffset: Dp
+) {
+    var roundTripValue by mutableStateOf<RoundTripValue>(RoundTripValue.Idle)
+        private set
+    var targetOffset by mutableStateOf(minOffset)
+        private set
 
-    fun start() {
-        targetOffset.value = maxOffset
-        roundTripValue.value = RoundTripValue.Going
+    suspend fun start() {
+        suspendCancellableCoroutine { continuation ->
+            if (continuation.isActive) {
+                continuation.resumeWith(
+                    kotlin.runCatching {
+                        targetOffset = maxOffset
+                        roundTripValue = RoundTripValue.Going
+                    }
+                )
+            }
+        }
     }
 
-    fun turnBack() {
-        targetOffset.value = minOffset
-        roundTripValue.value = RoundTripValue.TurningBack
+    private fun turnBack() {
+        targetOffset = minOffset
+        roundTripValue = RoundTripValue.TurningBack
     }
 
-    fun enterIdle() {
-        roundTripValue.value = RoundTripValue.Idle
+    private fun enterIdle() {
+        roundTripValue = RoundTripValue.Idle
     }
 
-    fun doTurnBackOrEnterIdle(dp: Dp) {
-        if (dp == minOffset) {
-            enterIdle()
-        } else if (dp == maxOffset) {
-            turnBack()
+    suspend fun doTurnBackOrEnterIdle(dp: Dp) {
+        suspendCancellableCoroutine { continuation ->
+            if (continuation.isActive) {
+                continuation.resumeWith(
+                    dp.runCatching {
+                        if (equals(minOffset)) {
+                            enterIdle()
+                        } else if (equals(maxOffset)) {
+                            turnBack()
+                        }
+                    }
+                )
+            }
         }
     }
 }
@@ -59,16 +73,22 @@ interface RoundTripState {
 fun rememberRoundTripState(
     maxOffset: Dp = (-150).dp,
     minOffset: Dp = 0.dp,
-): RoundTripStateImpl = remember { RoundTripStateImpl(maxOffset, minOffset) }
+): RoundTripState = remember(
+    maxOffset,
+    minOffset
+) {
+    RoundTripState(maxOffset, minOffset)
+}
 
 @Composable
 fun animateRoundTripByDpAsState(
-    roundTripState: RoundTripStateImpl = rememberRoundTripState()
-): State<Dp> {
-    val targetOffset by remember { roundTripState.targetOffset }
-
-    return animateDpAsState(
-        targetValue = targetOffset,
-        finishedListener = roundTripState::doTurnBackOrEnterIdle
-    )
-}
+    roundTripState: RoundTripState = rememberRoundTripState(),
+    coroutineScope: CoroutineScope = rememberCoroutineScope()
+): State<Dp> = animateDpAsState(
+    targetValue = roundTripState.targetOffset,
+    finishedListener = {
+        coroutineScope.launch {
+            roundTripState.doTurnBackOrEnterIdle(it)
+        }
+    }
+)
