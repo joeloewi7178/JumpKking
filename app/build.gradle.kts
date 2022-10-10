@@ -46,6 +46,7 @@ android {
         }
 
         val release by getting {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isDebuggable = false
             isShrinkResources = true
