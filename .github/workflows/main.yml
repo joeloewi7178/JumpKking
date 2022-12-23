@@ -39,7 +39,7 @@ jobs:
           echo '${{ secrets.GOOGLE_SERVICES_JSON_DATA_MODULE }}' > ./data/google-services.json
       
       - name: Generate jks file from base64
-        uses: timheuer/base64-to-file@v1.1
+        uses: timheuer/base64-to-file@v1.2
         with:
           fileName: 'jump_kking_key_store.jks'
           fileDir: './'
