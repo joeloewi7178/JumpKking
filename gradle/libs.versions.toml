@@ -57,7 +57,7 @@ junit = "4.13.2"
 ksp = "1.7.20-1.0.6"
 tts = "1.2.1"
 rxjava3 = "3.1.5"
-rxjava3Android = "3.0.0"
+rxjava3Android = "3.0.2"
 rxjava3Kotlin = "3.0.1"
 
 [libraries]
