@@ -83,7 +83,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.appcompat)
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.ext.junit.ktx)
     androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(libs.androidx.compose.ui.test)
 
@@ -103,12 +103,14 @@ dependencies {
     kapt(libs.hilt.ext.compiler)
 
     //compose
+    implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.runtime.livedata)
     implementation(libs.androidx.compose.material.iconsExtended)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     //accompanist
@@ -116,9 +118,8 @@ dependencies {
     implementation(libs.accompanist.pager)
     implementation(libs.accompanist.placeholder)
     implementation(libs.accompanist.systemuicontroller)
-    implementation(libs.accompanist.webview)
     implementation(libs.accompanist.pager.indicators)
-    implementation(libs.accompanist.swiperefresh)
+    implementation(libs.accompanist.themeadapter.material3)
 
     //work
     implementation(libs.androidx.work.ktx)
@@ -138,14 +139,11 @@ dependencies {
     //paging
     implementation(libs.androidx.paging.compose)
 
-    // https://mvnrepository.com/artifact/com.google.android.material/compose-theme-adapter-3
-    implementation(libs.material.compose.theme.adapter3)
-
     //html parsing
     implementation(libs.jsoup)
 
     //in-app update
-    implementation(libs.android.play.core.ktx)
+    implementation(libs.android.play.app.update.ktx)
 
     ///firebase
     implementation(platform(libs.firebase.bom))
