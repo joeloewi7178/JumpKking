@@ -2,6 +2,7 @@ package com.joeloewi.jumpkking
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
@@ -38,7 +39,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.itemsIndexed
 import coil.compose.AsyncImage
@@ -55,12 +59,14 @@ import com.joeloewi.jumpkking.state.Friend
 import com.joeloewi.jumpkking.state.Lce
 import com.joeloewi.jumpkking.state.MainState
 import com.joeloewi.jumpkking.state.rememberMainState
-import com.joeloewi.jumpkking.ui.theme.ContentAlpha
 import com.joeloewi.jumpkking.ui.theme.JumpKkingTheme
 import com.joeloewi.jumpkking.util.*
+import com.joeloewi.jumpkking.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import nl.marc_apps.tts.TextToSpeechInstance
@@ -76,10 +82,32 @@ import java.text.DecimalFormat
 @ExperimentalMaterial3Api
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+    private val _mainViewModel: MainViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
 
-        installSplashScreen()
+        var currentUser by mutableStateOf<Lce<Any>>(Lce.Loading)
+
+        lifecycleScope.launch {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                _mainViewModel.currentUser.onEach {
+                    currentUser = it
+                }.collect()
+            }
+        }
+
+        splashScreen.setKeepOnScreenCondition {
+            when (_mainViewModel.currentUser.value) {
+                Lce.Loading -> {
+                    true
+                }
+                else -> {
+                    false
+                }
+            }
+        }
 
         DynamicColors.applyToActivityIfAvailable(this)
 
@@ -92,7 +120,9 @@ class MainActivity : AppCompatActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     CompositionLocalProvider(LocalActivity provides this) {
-                        JumpKkingApp()
+                        JumpKkingApp(
+                            mainState = rememberMainState(mainViewModel = _mainViewModel)
+                        )
                     }
                 }
             }
@@ -122,7 +152,7 @@ fun JumpKkingApp(
         with(insertReportCardState) {
             when (this) {
                 is Lce.Error -> {
-                    val message = this.error.castToQuotaReachedExceptionAndGetMessage()
+                    val message = error.castToQuotaReachedExceptionAndGetMessage()
 
                     with(scaffoldState.snackbarHostState) {
                         currentSnackbarData?.dismiss()
@@ -242,7 +272,11 @@ fun JumpKkingApp(
             Row(
                 modifier = Modifier.padding(vertical = 8.dp),
             ) {
-                HorizontalPagerIndicator(pagerState = pagerState)
+                HorizontalPagerIndicator(
+                    activeColor = androidx.compose.material3.LocalContentColor.current,
+                    inactiveColor = androidx.compose.material3.LocalContentColor.current.copy(alpha = 0.38f),
+                    pagerState = pagerState
+                )
             }
         }
     }
@@ -346,7 +380,7 @@ fun CatImage(
     val context = LocalContext.current
     val (scale, onScaleChange) = remember { mutableStateOf(1.0f) }
     val animateScale by animateFloatAsState(targetValue = scale)
-    val meowingCat = remember(context) {
+    val meowingCat = remember(context, lifecycleOwner) {
         ImageRequest.Builder(context)
             .data(R.drawable.mysterious_cat)
             .lifecycle(lifecycleOwner)
@@ -357,7 +391,9 @@ fun CatImage(
         modifier = Modifier
             .scale(animateScale)
             .animateContentSize()
-            .fillMaxSize(0.4f)
+            .fillMaxWidth(0.4f)
+            .aspectRatio(1.0f)
+            .padding(bottom = 16.dp)
             .clickable(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() },
@@ -401,13 +437,13 @@ fun HamsterImage(
     val context = LocalContext.current
     val roundTripValue = roundTripState.roundTripValue
     val roundTripAnimationOffset by animateRoundTripByDpAsState(roundTripState = roundTripState)
-    val idleHamster = remember(context) {
+    val idleHamster = remember(context, lifecycleOwner) {
         ImageRequest.Builder(context)
             .data(R.drawable.idle_hamster)
             .lifecycle(lifecycleOwner)
             .build()
     }
-    val jumpingHamster = remember(context) {
+    val jumpingHamster = remember(context, lifecycleOwner) {
         ImageRequest.Builder(context)
             .data(R.drawable.jumping_hamster)
             .lifecycle(lifecycleOwner)
@@ -416,7 +452,9 @@ fun HamsterImage(
 
     AsyncImage(
         modifier = Modifier
-            .fillMaxSize(0.4f)
+            .fillMaxWidth(0.4f)
+            .aspectRatio(1.0f)
+            .padding(bottom = 16.dp)
             .absoluteOffset(y = roundTripAnimationOffset)
             .clickable(
                 indication = null,
@@ -640,7 +678,6 @@ fun ExpandedBottomSheet(
                         supportingText = if (isMyReportCard) {
                             {
                                 Text(
-                                    modifier = Modifier.alpha(ContentAlpha.medium),
                                     text = "나"
                                 )
                             }

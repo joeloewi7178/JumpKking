@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.rx3.asFlowable
 import kotlinx.coroutines.rx3.asScheduler
+import kotlinx.coroutines.withContext
 import nl.marc_apps.tts.TextToSpeech
 import okhttp3.internal.closeQuietly
 import java.util.concurrent.TimeUnit
@@ -36,38 +37,62 @@ class MainViewModel @Inject constructor(
     private val getCurrentUserFirebaseAuthUseCase: FirebaseAuthUseCase.GetCurrentUser,
     private val signInAnonymouslyFirebaseAuthUseCase: FirebaseAuthUseCase.SignInAnonymously
 ) : ViewModel() {
+    private val _ioScheduler = Dispatchers.IO.asScheduler()
     private val _values = getValuesUseCase()
     private val _jumpCount = _values.map { it.jumpCount }
     private val _reportCard = _jumpCount
         .flowOn(Dispatchers.IO)
         .asFlowable(viewModelScope.coroutineContext)
-        .observeOn(Dispatchers.IO.asScheduler())
+        .observeOn(_ioScheduler)
         .throttleLatest(5, TimeUnit.SECONDS)
-        .subscribeOn(Dispatchers.IO.asScheduler())
+        .subscribeOn(_ioScheduler)
         .asFlow()
 
-    val insertReportCardState = _reportCard.map {
-        setReportCardUseCase.runCatching {
-            invoke(
-                ReportCard(
-                    androidId = androidId,
-                    jumpCount = it
-                )
-            )
+    val currentUser = flow {
+        signInAnonymouslyFirebaseAuthUseCase.runCatching {
+            getCurrentUserFirebaseAuthUseCase() ?: invoke()
         }.fold(
             onSuccess = {
+                setJumpCountIfExistsInServer(_values.first().jumpCount)
                 Lce.Content(it)
             },
             onFailure = {
-                FirebaseCrashlytics.getInstance().recordException(it)
                 Lce.Error(it)
             }
-        )
+        ).let {
+            emit(it)
+        }
     }.flowOn(Dispatchers.IO).stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(),
+        started = SharingStarted.Lazily,
         initialValue = Lce.Loading
     )
+    val insertReportCardState =
+        combine(_reportCard, currentUser) { reportCard, currentUser -> reportCard to currentUser }
+            .filter { it.second is Lce.Content }
+            .map { it.first }
+            .map {
+                setReportCardUseCase.runCatching {
+                    invoke(
+                        ReportCard(
+                            androidId = androidId,
+                            jumpCount = it
+                        )
+                    )
+                }.fold(
+                    onSuccess = {
+                        Lce.Content(it)
+                    },
+                    onFailure = {
+                        FirebaseCrashlytics.getInstance().recordException(it)
+                        Lce.Error(it)
+                    }
+                )
+            }.flowOn(Dispatchers.IO).stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(),
+                initialValue = Lce.Loading
+            )
     val jumpCount = _jumpCount.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(),
@@ -97,21 +122,17 @@ class MainViewModel @Inject constructor(
         initialValue = Lce.Loading
     )
 
-    init {
-        viewModelScope.launch(Dispatchers.IO) {
-            if (getCurrentUserFirebaseAuthUseCase() == null) {
-                signInAnonymouslyFirebaseAuthUseCase()
+    private suspend fun setJumpCountIfExistsInServer(
+        currentJumpCount: Long
+    ) = withContext(Dispatchers.IO) {
+        getOneReportCardUseCase.runCatching {
+            invoke()
+        }.onSuccess {
+            if (currentJumpCount == 0L && it != null) {
+                setJumpCount(it.jumpCount)
             }
-
-            getOneReportCardUseCase.runCatching {
-                invoke()
-            }.onSuccess {
-                if (_values.first().jumpCount == 0L && it != null) {
-                    setJumpCount(it.jumpCount)
-                }
-            }.onFailure { cause ->
-                FirebaseCrashlytics.getInstance().recordException(cause)
-            }
+        }.onFailure { cause ->
+            FirebaseCrashlytics.getInstance().recordException(cause)
         }
     }
 
