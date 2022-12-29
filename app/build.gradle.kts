@@ -87,8 +87,9 @@ dependencies {
     androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(libs.androidx.compose.ui.test)
 
-    implementation(libs.androidx.lifecycle.runtimeCompose)
-    implementation(libs.androidx.lifecycle.viewModelCompose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.process)
 
     implementation(libs.androidx.savedstate.ktx)
 

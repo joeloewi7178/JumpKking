@@ -9,7 +9,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.google.firebase.crashlytics.internal.model.ImmutableList
 import com.joeloewi.jumpkking.viewmodel.MainViewModel
 
-@ExperimentalLifecycleComposeApi
+@OptIn(ExperimentalLifecycleComposeApi::class)
 @Stable
 class MainState(
     val friends: ImmutableList<Friend>,
@@ -20,6 +20,7 @@ class MainState(
 
     val pagedReportCards
         @Composable get() = mainViewModel.pagedReportCards.collectAsLazyPagingItems()
+
 
     val insertReportCardState
         @Composable get() = mainViewModel.insertReportCardState.collectAsStateWithLifecycle().value
@@ -39,7 +40,6 @@ enum class Friend {
     Hamster, Cat
 }
 
-@ExperimentalLifecycleComposeApi
 @Composable
 fun rememberMainState(
     friends: ImmutableList<Friend> = ImmutableList.from(*Friend.values()),

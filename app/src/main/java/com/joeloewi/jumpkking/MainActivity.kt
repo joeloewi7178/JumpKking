@@ -5,7 +5,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.*
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -27,10 +26,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -40,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.paging.LoadState
@@ -63,23 +59,12 @@ import com.joeloewi.jumpkking.ui.theme.JumpKkingTheme
 import com.joeloewi.jumpkking.util.*
 import com.joeloewi.jumpkking.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import nl.marc_apps.tts.TextToSpeechInstance
 import java.text.DecimalFormat
 
-@ExperimentalComposeUiApi
-@ExperimentalPagerApi
-@ExperimentalLifecycleComposeApi
-@ExperimentalLayoutApi
-@ExperimentalFoundationApi
-@ExperimentalAnimationApi
-@ExperimentalMaterialApi
-@ExperimentalMaterial3Api
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private val _mainViewModel: MainViewModel by viewModels()
@@ -130,14 +115,12 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-@ExperimentalComposeUiApi
-@ExperimentalPagerApi
-@ExperimentalLifecycleComposeApi
-@ExperimentalLayoutApi
-@ExperimentalMaterialApi
-@ExperimentalAnimationApi
-@ExperimentalMaterial3Api
-@ExperimentalFoundationApi
+@OptIn(
+    ExperimentalPagerApi::class,
+    ExperimentalLayoutApi::class,
+    ExperimentalMaterialApi::class,
+    ExperimentalAnimationApi::class
+)
 @Composable
 fun JumpKkingApp(
     mainState: MainState = rememberMainState(mainViewModel = hiltViewModel())
@@ -282,7 +265,7 @@ fun JumpKkingApp(
     }
 }
 
-@ExperimentalAnimationApi
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun AnimatedCount(
     count: Long,
@@ -311,7 +294,6 @@ fun AnimatedCount(
     }
 }
 
-@ExperimentalLifecycleComposeApi
 @Composable
 fun HamsterCard(
     textToSpeech: Lce<TextToSpeechInstance>,
@@ -339,9 +321,6 @@ fun HamsterCard(
     }
 }
 
-@ExperimentalAnimationApi
-@ExperimentalComposeUiApi
-@ExperimentalLifecycleComposeApi
 @Composable
 fun CatCard(
     textToSpeech: Lce<TextToSpeechInstance>,
@@ -367,8 +346,6 @@ fun CatCard(
     }
 }
 
-@ExperimentalAnimationApi
-@ExperimentalComposeUiApi
 @Composable
 fun CatImage(
     textToSpeech: Lce<TextToSpeechInstance>,
@@ -376,20 +353,24 @@ fun CatImage(
 ) {
     val meowing = remember { "뫼애앵" }
     val coroutineScope = rememberCoroutineScope()
+    val (isTtsPlaying, onIsTtsPlayingChange) = remember { mutableStateOf(false) }
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
-    val (scale, onScaleChange) = remember { mutableStateOf(1.0f) }
-    val animateScale by animateFloatAsState(targetValue = scale)
+    val idleCat = remember(context, lifecycleOwner) {
+        ImageRequest.Builder(context)
+            .data(R.drawable.idle_mysterious_cat)
+            .lifecycle(lifecycleOwner)
+            .build()
+    }
     val meowingCat = remember(context, lifecycleOwner) {
         ImageRequest.Builder(context)
-            .data(R.drawable.mysterious_cat)
+            .data(R.drawable.meowing_mysterious_cat)
             .lifecycle(lifecycleOwner)
             .build()
     }
 
     AsyncImage(
         modifier = Modifier
-            .scale(animateScale)
             .animateContentSize()
             .fillMaxWidth(0.4f)
             .aspectRatio(1.0f)
@@ -397,30 +378,28 @@ fun CatImage(
             .clickable(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() },
-                enabled = animateScale == 1.0f && textToSpeech is Lce.Content
+                enabled = textToSpeech is Lce.Content
             ) {
-                coroutineScope.launch(Dispatchers.Main) {
-                    onScaleChange(1.2f)
-                    delay(250)
-                    onScaleChange(1.0f)
-                }
-
                 onCountChange()
 
                 coroutineScope.launch(Dispatchers.IO) {
-                    textToSpeech.content
-                        ?.runCatching {
-                            say(
-                                text = meowing,
-                                clearQueue = true
-                            )
-                        }
-                        ?.onFailure { cause ->
-                            cause.printStackTrace()
-                        }
+                    onIsTtsPlayingChange(true)
+
+                    textToSpeech.content?.runCatching {
+                        say(
+                            text = meowing,
+                            clearQueue = true,
+                        )
+                    }
+
+                    onIsTtsPlayingChange(false)
                 }
             },
-        model = meowingCat,
+        model = if (isTtsPlaying) {
+            meowingCat
+        } else {
+            idleCat
+        },
         contentDescription = null
     )
 }
@@ -492,9 +471,7 @@ fun HamsterImage(
     )
 }
 
-@ExperimentalLayoutApi
-@ExperimentalMaterialApi
-@ExperimentalMaterial3Api
+@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun CollapsedBottomSheet(
     scaffoldState: BottomSheetScaffoldState
@@ -546,10 +523,11 @@ fun CollapsedBottomSheet(
     }
 }
 
-@ExperimentalLifecycleComposeApi
-@ExperimentalFoundationApi
-@ExperimentalMaterialApi
-@ExperimentalMaterial3Api
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterialApi::class,
+    ExperimentalFoundationApi::class
+)
 @Composable
 fun ExpandedBottomSheet(
     scaffoldState: BottomSheetScaffoldState,
@@ -693,7 +671,7 @@ fun ExpandedBottomSheet(
     }
 }
 
-@ExperimentalMaterial3Api
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ReportCardListItemPlaceHolder(
     isPlaceholderVisible: Boolean = true

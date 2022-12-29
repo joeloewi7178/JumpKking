@@ -15,5 +15,8 @@ dependencyResolutionManagement {
     }
 }
 
-include(":app", ":data", ":domain", ":benchmark")
 rootProject.name = "JumpKking"
+include(":app")
+include(":data")
+include(":domain")
+include(":benchmark")
