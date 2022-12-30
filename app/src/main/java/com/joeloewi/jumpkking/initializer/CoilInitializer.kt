@@ -9,7 +9,7 @@ import dagger.hilt.EntryPoints
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 
-class CoilInitializer: Initializer<Unit> {
+class CoilInitializer : Initializer<Unit> {
 
     lateinit var imageLoader: ImageLoader
 

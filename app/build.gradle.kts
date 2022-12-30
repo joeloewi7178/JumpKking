@@ -119,6 +119,7 @@ dependencies {
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.accompanist.pager.indicators)
     implementation(libs.accompanist.themeadapter.material3)
+    implementation(libs.accompanist.navigation.material)
 
     //work
     implementation(libs.androidx.work.ktx)
