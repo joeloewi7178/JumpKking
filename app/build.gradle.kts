@@ -16,8 +16,8 @@ android {
         applicationId = "com.joeloewi.jumpkking"
         minSdk = 21
         targetSdk = 33
-        versionCode = 9
-        versionName = "1.0.9"
+        versionCode = 10
+        versionName = "1.0.10"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
