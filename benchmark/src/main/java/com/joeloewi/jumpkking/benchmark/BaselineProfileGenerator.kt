@@ -20,6 +20,6 @@ class BaselineProfileGenerator {
     ) {
         startActivityAndWait()
 
-        device.wait(Until.hasObject(By.textContains("같이")), 30_000)
+        device.waitForIdle(60_000)
     }
 }
