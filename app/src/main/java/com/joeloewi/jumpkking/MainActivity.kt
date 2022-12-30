@@ -235,17 +235,13 @@ fun JumpKkingApp(
                             HamsterCard(
                                 textToSpeech = textToSpeech,
                                 roundTripState = roundTripState,
-                                onCountChange = {
-                                    mainState.setJumpCount(jumpCount + 1)
-                                }
+                                onCountChange = mainState::increaseJumpCount
                             )
                         }
                         Friend.Cat -> {
                             CatCard(
                                 textToSpeech = textToSpeech,
-                                onCountChange = {
-                                    mainState.setJumpCount(jumpCount + 1)
-                                }
+                                onCountChange = mainState::increaseJumpCount
                             )
                         }
                     }
@@ -371,14 +367,13 @@ fun CatImage(
 
     AsyncImage(
         modifier = Modifier
-            .animateContentSize()
             .fillMaxWidth(0.4f)
             .aspectRatio(1.0f)
             .padding(bottom = 16.dp)
             .clickable(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() },
-                enabled = textToSpeech is Lce.Content
+                enabled = textToSpeech is Lce.Content && !isTtsPlaying
             ) {
                 onCountChange()
 

@@ -31,8 +31,8 @@ class MainState(
     val textToSpeech
         @Composable get() = mainViewModel.textToSpeech.collectAsStateWithLifecycle().value
 
-    fun setJumpCount(jumpCount: Long) {
-        mainViewModel.setJumpCount(jumpCount)
+    fun increaseJumpCount() {
+        mainViewModel.increaseJumpCount()
     }
 }
 

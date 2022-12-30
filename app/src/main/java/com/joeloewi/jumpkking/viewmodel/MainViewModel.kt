@@ -28,7 +28,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val application: Application,
-    getValuesUseCase: ValuesUseCase.GetValues,
+    private val getValuesUseCase: ValuesUseCase.GetValues,
     private val setJumpCountUseCase: ValuesUseCase.SetJumpCount,
     private val setReportCardUseCase: ReportCardUseCase.Insert,
     getAllPagedReportCardUseCase: ReportCardUseCase.GetAllPaged,
@@ -129,16 +129,16 @@ class MainViewModel @Inject constructor(
             invoke()
         }.onSuccess {
             if (currentJumpCount == 0L && it != null) {
-                setJumpCount(it.jumpCount)
+                setJumpCountUseCase(it.jumpCount)
             }
         }.onFailure { cause ->
             FirebaseCrashlytics.getInstance().recordException(cause)
         }
     }
 
-    fun setJumpCount(jumpCount: Long) {
+    fun increaseJumpCount() {
         viewModelScope.launch(Dispatchers.IO) {
-            setJumpCountUseCase(jumpCount)
+            setJumpCountUseCase(getValuesUseCase().first().jumpCount + 1)
         }
     }
 }

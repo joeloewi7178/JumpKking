@@ -26,6 +26,10 @@
             <meta-data
                 android:name="com.joeloewi.jumpkking.initializer.ComposeViewInitializer"
                 android:value="androidx.startup" />
+
+            <meta-data
+                android:name="com.joeloewi.jumpkking.initializer.CoilInitializer"
+                android:value="androidx.startup" />
         </provider>
 
         <activity

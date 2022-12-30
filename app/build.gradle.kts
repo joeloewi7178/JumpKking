@@ -104,14 +104,12 @@ dependencies {
     kapt(libs.hilt.ext.compiler)
 
     //compose
-    implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.runtime.livedata)
     implementation(libs.androidx.compose.material.iconsExtended)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     //accompanist
@@ -132,6 +130,7 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
 
     //image load
+    implementation(libs.coil.kt.base)
     implementation(libs.coil.kt.compose)
 
     //webkit
