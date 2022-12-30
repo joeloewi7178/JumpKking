@@ -6,6 +6,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface ReportCardRepository {
     fun getAllPaged(): Flow<PagingData<ReportCard>>
-    suspend fun insertReportCard(reportCard: ReportCard)
+    suspend fun insertReportCard(reportCard: ReportCard): Void?
     suspend fun getReportCard(): ReportCard?
 }

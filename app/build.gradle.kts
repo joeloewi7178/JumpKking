@@ -16,8 +16,8 @@ android {
         applicationId = "com.joeloewi.jumpkking"
         minSdk = 21
         targetSdk = 33
-        versionCode = 9
-        versionName = "1.0.9"
+        versionCode = 10
+        versionName = "1.0.10"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -83,12 +83,13 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.appcompat)
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.ext.junit.ktx)
     androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(libs.androidx.compose.ui.test)
 
-    implementation(libs.androidx.lifecycle.runtimeCompose)
-    implementation(libs.androidx.lifecycle.viewModelCompose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.process)
 
     implementation(libs.androidx.savedstate.ktx)
 
@@ -116,9 +117,9 @@ dependencies {
     implementation(libs.accompanist.pager)
     implementation(libs.accompanist.placeholder)
     implementation(libs.accompanist.systemuicontroller)
-    implementation(libs.accompanist.webview)
     implementation(libs.accompanist.pager.indicators)
-    implementation(libs.accompanist.swiperefresh)
+    implementation(libs.accompanist.themeadapter.material3)
+    implementation(libs.accompanist.navigation.material)
 
     //work
     implementation(libs.androidx.work.ktx)
@@ -130,6 +131,7 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
 
     //image load
+    implementation(libs.coil.kt.base)
     implementation(libs.coil.kt.compose)
 
     //webkit
@@ -138,14 +140,8 @@ dependencies {
     //paging
     implementation(libs.androidx.paging.compose)
 
-    // https://mvnrepository.com/artifact/com.google.android.material/compose-theme-adapter-3
-    implementation(libs.material.compose.theme.adapter3)
-
-    //html parsing
-    implementation(libs.jsoup)
-
     //in-app update
-    implementation(libs.android.play.core.ktx)
+    implementation(libs.android.play.app.update.ktx)
 
     ///firebase
     implementation(platform(libs.firebase.bom))
