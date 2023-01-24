@@ -4,11 +4,12 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.animation.*
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CornerSize
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ModalBottomSheetValue
+import androidx.compose.material.rememberModalBottomSheetState
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.*
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -19,10 +20,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.google.accompanist.navigation.material.BottomSheetNavigator
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.google.accompanist.navigation.material.ModalBottomSheetLayout
 import com.google.accompanist.navigation.material.bottomSheet
-import com.google.accompanist.navigation.material.rememberBottomSheetNavigator
 import com.google.android.material.color.DynamicColors
 import com.joeloewi.jumpkking.state.Lce
 import com.joeloewi.jumpkking.ui.navigation.JumpKkingNavigation
@@ -30,14 +31,14 @@ import com.joeloewi.jumpkking.ui.navigation.friends.FriendsDestination
 import com.joeloewi.jumpkking.ui.navigation.friends.screen.FriendsScreen
 import com.joeloewi.jumpkking.ui.navigation.friends.screen.RankingScreen
 import com.joeloewi.jumpkking.ui.theme.JumpKkingTheme
-import com.joeloewi.jumpkking.util.*
+import com.joeloewi.jumpkking.util.LocalActivity
 import com.joeloewi.jumpkking.viewmodel.FriendsViewModel
 import com.joeloewi.jumpkking.viewmodel.MainViewModel
 import com.joeloewi.jumpkking.viewmodel.RankingViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -58,14 +59,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         splashScreen.setKeepOnScreenCondition {
-            when (currentUser) {
-                Lce.Loading -> {
-                    true
-                }
-                else -> {
-                    false
-                }
-            }
+            currentUser.isLoading
         }
 
         DynamicColors.applyToActivityIfAvailable(this)
@@ -82,10 +76,14 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterialNavigationApi::class)
+@OptIn(ExperimentalMaterialNavigationApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun JumpKkingApp() {
-    val bottomSheetNavigator = rememberBottomSheetNavigator()
+    val sheetState = rememberModalBottomSheetState(
+        initialValue = ModalBottomSheetValue.Hidden,
+        skipHalfExpanded = true
+    )
+    val bottomSheetNavigator = remember(sheetState) { BottomSheetNavigator(sheetState) }
     val navController = rememberNavController(bottomSheetNavigator)
 
     ModalBottomSheetLayout(

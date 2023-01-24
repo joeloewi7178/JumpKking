@@ -15,6 +15,6 @@ class UtilModule {
 
     @Provides
     @Singleton
-    fun provideImageLoader(@ApplicationContext context: Context) =
+    fun provideImageLoader(@ApplicationContext context: Context): ImageLoader =
         ImageLoader.Builder(context).build()
 }

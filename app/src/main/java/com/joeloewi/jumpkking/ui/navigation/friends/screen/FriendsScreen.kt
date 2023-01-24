@@ -51,7 +51,6 @@ fun FriendsScreen(
 
 @OptIn(
     ExperimentalMaterial3Api::class,
-    ExperimentalLayoutApi::class,
     ExperimentalPagerApi::class
 )
 @Composable
