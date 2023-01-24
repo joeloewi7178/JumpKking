@@ -3,14 +3,12 @@ package com.joeloewi.jumpkking.state
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
-import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.google.firebase.crashlytics.internal.model.ImmutableList
 import com.joeloewi.jumpkking.ui.navigation.friends.FriendsDestination
 import com.joeloewi.jumpkking.viewmodel.FriendsViewModel
 
-@OptIn(ExperimentalLifecycleComposeApi::class)
 @Stable
 class FriendsState(
     private val navController: NavController,

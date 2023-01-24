@@ -30,6 +30,10 @@
             <meta-data
                 android:name="com.joeloewi.jumpkking.initializer.CoilInitializer"
                 android:value="androidx.startup" />
+
+            <meta-data
+                android:name="com.joeloewi.jumpkking.initializer.DynamicColorInitializer"
+                android:value="androidx.startup" />
         </provider>
 
         <activity

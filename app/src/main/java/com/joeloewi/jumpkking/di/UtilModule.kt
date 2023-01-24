@@ -2,6 +2,7 @@ package com.joeloewi.jumpkking.di
 
 import android.content.Context
 import coil.ImageLoader
+import coil.size.Precision
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,6 +16,8 @@ class UtilModule {
 
     @Provides
     @Singleton
-    fun provideImageLoader(@ApplicationContext context: Context) =
-        ImageLoader.Builder(context).build()
+    fun provideImageLoader(@ApplicationContext context: Context): ImageLoader =
+        ImageLoader.Builder(context)
+            .crossfade(true)
+            .build()
 }

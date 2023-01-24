@@ -2,10 +2,9 @@
 plugins {
     id("jumpkking.android.application")
     id("jumpkking.android.application.compose")
-    kotlin("kapt")
+    id("jumpkking.android.hilt")
     alias(libs.plugins.gms.google.services)
     id("kotlin-parcelize")
-    id("dagger.hilt.android.plugin")
     alias(libs.plugins.firebase.crashlytics)
 }
 
@@ -16,8 +15,8 @@ android {
         applicationId = "com.joeloewi.jumpkking"
         minSdk = 21
         targetSdk = 33
-        versionCode = 10
-        versionName = "1.0.10"
+        versionCode = 11
+        versionName = "1.0.11"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

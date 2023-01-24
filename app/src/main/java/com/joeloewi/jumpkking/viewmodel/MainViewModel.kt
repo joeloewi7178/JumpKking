@@ -8,6 +8,7 @@ import com.joeloewi.domain.usecase.ReportCardUseCase
 import com.joeloewi.domain.usecase.ValuesUseCase
 import com.joeloewi.jumpkking.state.Lce
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
@@ -51,6 +52,10 @@ class MainViewModel @Inject constructor(
                 setJumpCountUseCase(it.jumpCount)
             }
         }.onFailure { cause ->
+            if (cause is CancellationException) {
+                throw cause
+            }
+
             FirebaseCrashlytics.getInstance().recordException(cause)
         }
     }

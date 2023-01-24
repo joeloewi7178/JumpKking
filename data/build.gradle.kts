@@ -1,10 +1,9 @@
 @Suppress("DSL_SCOPE_VIOLATION")
 plugins {
     id("jumpkking.android.library")
-    kotlin("kapt")
+    id("jumpkking.android.hilt")
     alias(libs.plugins.protobuf)
     alias(libs.plugins.ksp)
-    id("dagger.hilt.android.plugin")
     alias(libs.plugins.gms.google.services)
 }
 

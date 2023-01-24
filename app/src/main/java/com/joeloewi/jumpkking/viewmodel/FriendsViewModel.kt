@@ -6,10 +6,12 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.joeloewi.domain.entity.ReportCard
 import com.joeloewi.domain.entity.Values
+import com.joeloewi.domain.usecase.FirebaseAuthUseCase
 import com.joeloewi.domain.usecase.ReportCardUseCase
 import com.joeloewi.domain.usecase.ValuesUseCase
 import com.joeloewi.jumpkking.state.Lce
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
@@ -29,6 +31,8 @@ class FriendsViewModel @Inject constructor(
     private val setJumpCountUseCase: ValuesUseCase.SetJumpCount,
     private val setReportCardUseCase: ReportCardUseCase.Insert,
     private val androidId: String,
+    private val getCurrentUserFirebaseAuthUseCase: FirebaseAuthUseCase.GetCurrentUser,
+    private val signInAnonymouslyFirebaseAuthUseCase: FirebaseAuthUseCase.SignInAnonymously
 ) : ViewModel() {
     private val _ioScheduler = Dispatchers.IO.asScheduler()
     private val _values = getValuesUseCase()
@@ -41,21 +45,27 @@ class FriendsViewModel @Inject constructor(
         .subscribeOn(_ioScheduler)
         .asFlow()
 
-    val insertReportCardState = _throttledJumpCount.map {
-        setReportCardUseCase.runCatching {
-            invoke(
+    val insertReportCardState = _throttledJumpCount.map { jumpCount ->
+        signInAnonymouslyFirebaseAuthUseCase.runCatching {
+            getCurrentUserFirebaseAuthUseCase() ?: invoke()
+        }.mapCatching {
+            setReportCardUseCase(
                 ReportCard(
                     androidId = androidId,
-                    jumpCount = it
+                    jumpCount = jumpCount
                 )
             )
         }.fold(
             onSuccess = {
                 Lce.Content(it)
             },
-            onFailure = {
-                FirebaseCrashlytics.getInstance().recordException(it)
-                Lce.Error(it)
+            onFailure = { cause ->
+                if (cause is CancellationException) {
+                    throw cause
+                }
+
+                FirebaseCrashlytics.getInstance().recordException(cause)
+                Lce.Error(cause)
             }
         )
     }.flowOn(Dispatchers.IO).stateIn(
@@ -84,6 +94,10 @@ class FriendsViewModel @Inject constructor(
 
         awaitClose { textToSpeechInstance.content?.closeQuietly() }
     }.catch { cause ->
+        if (cause is CancellationException) {
+            throw cause
+        }
+
         FirebaseCrashlytics.getInstance().recordException(cause)
     }.stateIn(
         scope = viewModelScope,
