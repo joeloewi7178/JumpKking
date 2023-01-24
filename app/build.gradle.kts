@@ -2,10 +2,9 @@
 plugins {
     id("jumpkking.android.application")
     id("jumpkking.android.application.compose")
-    kotlin("kapt")
+    id("jumpkking.android.hilt")
     alias(libs.plugins.gms.google.services)
     id("kotlin-parcelize")
-    id("dagger.hilt.android.plugin")
     alias(libs.plugins.firebase.crashlytics)
 }
 

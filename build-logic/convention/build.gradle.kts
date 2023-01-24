@@ -29,5 +29,9 @@ gradlePlugin {
             id = "jumpkking.android.library"
             implementationClass = "AndroidLibraryConventionPlugin"
         }
+        register("androidHilt") {
+            id = "jumpkking.android.hilt"
+            implementationClass = "AndroidHiltConventionPlugin"
+        }
     }
 }
