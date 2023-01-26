@@ -7,6 +7,12 @@ plugins {
     alias(libs.plugins.gms.google.services)
 }
 
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(11))
+    }
+}
+
 android {
     namespace = "com.joeloewi.data"
 

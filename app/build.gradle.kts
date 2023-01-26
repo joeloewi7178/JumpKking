@@ -8,6 +8,12 @@ plugins {
     alias(libs.plugins.firebase.crashlytics)
 }
 
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(11))
+    }
+}
+
 android {
     namespace = "com.joeloewi.jumpkking"
 
@@ -15,8 +21,8 @@ android {
         applicationId = "com.joeloewi.jumpkking"
         minSdk = 21
         targetSdk = 33
-        versionCode = 11
-        versionName = "1.0.11"
+        versionCode = 12
+        versionName = "1.0.12"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
