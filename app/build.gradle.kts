@@ -8,6 +8,12 @@ plugins {
     alias(libs.plugins.firebase.crashlytics)
 }
 
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(11))
+    }
+}
+
 android {
     namespace = "com.joeloewi.jumpkking"
 
