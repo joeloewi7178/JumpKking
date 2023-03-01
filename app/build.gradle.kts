@@ -19,8 +19,6 @@ android {
 
     defaultConfig {
         applicationId = "com.joeloewi.jumpkking"
-        minSdk = 21
-        targetSdk = 33
         versionCode = 12
         versionName = "1.0.12"
 
@@ -41,24 +39,16 @@ android {
 
     buildTypes {
         val debug by getting {
-            isMinifyEnabled = false
-            isDebuggable = true
-            isShrinkResources = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+
         }
 
         val release by getting {
-            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
-            isDebuggable = false
-            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
 
         val benchmark by creating {
@@ -164,10 +154,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.rx3)
 
     implementation(libs.androidx.profileinstaller)
-}
-
-kapt {
-    correctErrorTypes = true
 }
 
 hilt {
