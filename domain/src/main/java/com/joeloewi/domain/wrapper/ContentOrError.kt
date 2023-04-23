@@ -12,6 +12,7 @@ fun <T> ContentOrError<T>.getOrThrow(): T = when (this) {
     is ContentOrError.Content -> {
         content
     }
+
     is ContentOrError.Error -> {
         throw error
     }

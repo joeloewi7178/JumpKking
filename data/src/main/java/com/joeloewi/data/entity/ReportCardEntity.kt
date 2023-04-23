@@ -2,7 +2,7 @@ package com.joeloewi.data.entity
 
 import com.google.firebase.firestore.ServerTimestamp
 import java.time.ZonedDateTime
-import java.util.*
+import java.util.Date
 
 data class ReportCardEntity(
     val androidId: String = "",

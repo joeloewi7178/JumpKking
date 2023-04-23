@@ -116,7 +116,7 @@ private fun RankingContent(
                     }
                 },
                 title = {
-                    Text(text = "상위 100명 랭킹")
+                    Text(text = "랭킹")
                 },
                 actions = {
                     IconButton(

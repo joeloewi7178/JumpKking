@@ -2,7 +2,6 @@ package com.joeloewi.jumpkking.di
 
 import android.content.Context
 import coil.ImageLoader
-import coil.size.Precision
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
