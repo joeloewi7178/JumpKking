@@ -1,9 +1,13 @@
 package com.joeloewi.jumpkking.ui.navigation.friends.screen
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PageSize
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material3.*
@@ -19,10 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
-import com.google.accompanist.pager.rememberPagerState
 import com.joeloewi.jumpkking.R
 import com.joeloewi.jumpkking.state.Friend
 import com.joeloewi.jumpkking.state.FriendsState
@@ -50,8 +51,7 @@ fun FriendsScreen(
 }
 
 @OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalPagerApi::class
+    ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
 )
 @Composable
 private fun FriendsContent(
@@ -77,6 +77,7 @@ private fun FriendsContent(
                         )
                     }
                 }
+
                 else -> {
 
                 }
@@ -114,7 +115,8 @@ private fun FriendsContent(
             ) {
                 HorizontalPager(
                     state = pagerState,
-                    count = friendsState.friends.size,
+                    pageCount = friendsState.friends.size,
+                    pageSize = PageSize.Fill,
                     key = { Friend.values()[it].name }
                 ) { page ->
                     when (Friend.values()[page]) {
@@ -133,6 +135,7 @@ private fun FriendsContent(
                                 onCountChange = friendsState::increaseJumpCount
                             )
                         }
+
                         Friend.Cat -> {
                             CatCard(
                                 textToSpeech = textToSpeech,
@@ -147,9 +150,8 @@ private fun FriendsContent(
                 modifier = Modifier.padding(vertical = 8.dp),
             ) {
                 HorizontalPagerIndicator(
-                    activeColor = LocalContentColor.current,
-                    inactiveColor = LocalContentColor.current.copy(alpha = 0.38f),
-                    pagerState = pagerState
+                    pagerState = pagerState,
+                    pageCount = friendsState.friends.size
                 )
             }
         }
@@ -352,6 +354,7 @@ private fun HamsterImage(
             RoundTripValue.Idle -> {
                 idleHamster
             }
+
             else -> {
                 jumpingHamster
             }

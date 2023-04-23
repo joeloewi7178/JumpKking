@@ -36,7 +36,7 @@ class ReportCardDataSourceImpl @Inject constructor(
                 ).orderBy(
                     "timestamp",
                     Query.Direction.ASCENDING
-                ).limit(100),
+                ),
                 source
             )
         }

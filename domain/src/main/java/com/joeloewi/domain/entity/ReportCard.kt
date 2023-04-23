@@ -1,6 +1,7 @@
 package com.joeloewi.domain.entity
 
-import java.util.*
+import java.util.Calendar
+import java.util.Date
 
 data class ReportCard(
     val androidId: String = "",
