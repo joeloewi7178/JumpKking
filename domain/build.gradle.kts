@@ -12,4 +12,6 @@ kotlin {
 
 dependencies {
     implementation(libs.androidx.paging.common.ktx)
+
+    implementation(libs.javax.inject)
 }

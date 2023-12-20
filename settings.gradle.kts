@@ -19,4 +19,4 @@ rootProject.name = "JumpKking"
 include(":app")
 include(":data")
 include(":domain")
-include(":benchmark")
+include(":baselineprofile")

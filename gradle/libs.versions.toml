@@ -54,6 +54,7 @@ tts = "2.3.1"
 rxjava3 = "3.1.8"
 rxjava3Android = "3.0.2"
 rxjava3Kotlin = "3.0.1"
+androidxBaselineProfile = "1.2.2"
 
 [libraries]
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist" }
@@ -137,6 +138,7 @@ tts = { group = "nl.marc-apps", name = "tts", version.ref = "tts" }
 rxjava3-rxandroid = { group = "io.reactivex.rxjava3", name = "rxandroid", version.ref = "rxjava3Android" }
 rxjava3-rxjava = { group = "io.reactivex.rxjava3", name = "rxjava", version.ref = "rxjava3" }
 rxjava3-rxkotlin = { group = "io.reactivex.rxjava3", name = "rxkotlin", version.ref = "rxjava3Kotlin" }
+ksp-gradlePlugin = { group = "com.google.devtools.ksp", name = "com.google.devtools.ksp.gradle.plugin", version.ref = "kspPlugin" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
@@ -148,3 +150,5 @@ protobuf = { id = "com.google.protobuf", version.ref = "protobufPlugin" }
 gms-google-services = { id = "com.google.gms.google-services", version.ref = "gmsGoogleServicesGradlePlugin" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsPlugin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "kspPlugin" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+androidx-baselineprofile = { id = "androidx.baselineprofile", version.ref = "androidxBaselineProfile" }

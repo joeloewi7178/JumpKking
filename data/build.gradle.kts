@@ -4,7 +4,6 @@ plugins {
     id("jumpkking.android.hilt")
     alias(libs.plugins.protobuf)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.gms.google.services)
 }
 
 kotlin {
@@ -19,6 +18,10 @@ android {
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 }
 
@@ -41,7 +44,6 @@ dependencies {
 
     //hilt
     implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
 
     implementation(libs.androidx.paging.common.ktx)
 

@@ -22,15 +22,9 @@
             android:authorities="${applicationId}.androidx-startup"
             android:exported="false"
             tools:node="merge">
-
-            <meta-data
-                android:name="com.joeloewi.jumpkking.initializer.ComposeViewInitializer"
-                android:value="androidx.startup" />
-
             <meta-data
                 android:name="com.joeloewi.jumpkking.initializer.CoilInitializer"
                 android:value="androidx.startup" />
-
             <meta-data
                 android:name="com.joeloewi.jumpkking.initializer.DynamicColorInitializer"
                 android:value="androidx.startup" />

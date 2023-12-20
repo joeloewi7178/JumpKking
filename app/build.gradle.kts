@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.gms.google.services)
     id("kotlin-parcelize")
     alias(libs.plugins.firebase.crashlytics)
+    alias(libs.plugins.androidx.baselineprofile)
 }
 
 kotlin {
@@ -50,14 +51,6 @@ android {
             )
             signingConfig = signingConfigs.getByName("release")
         }
-
-        val benchmark by creating {
-            initWith(release)
-            signingConfig = signingConfigs.getByName("release")
-            matchingFallbacks += listOf("release")
-            isDebuggable = false
-            proguardFiles("baseline-profiles-rules.pro")
-        }
     }
 
     packaging {
@@ -92,11 +85,9 @@ dependencies {
 
     //hilt
     implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
 
     //hilt-extension
     implementation(libs.hilt.ext.work)
-    kapt(libs.hilt.ext.compiler)
 
     //compose
     implementation(libs.androidx.compose.foundation)
@@ -154,6 +145,8 @@ dependencies {
     implementation(libs.kotlinx.coroutines.rx3)
 
     implementation(libs.androidx.profileinstaller)
+
+    implementation(libs.kotlinx.collections.immutable)
 }
 
 hilt {
