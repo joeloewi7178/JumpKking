@@ -68,7 +68,7 @@ baselineProfile {
 dependencies {
     implementation(project(":data"))
     implementation(project(":domain"))
-    baselineProfile(project(":baseline-profile"))
+    baselineProfile(project(":baselineprofile"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.android.material)
