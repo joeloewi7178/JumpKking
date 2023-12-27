@@ -1,16 +1,9 @@
 @Suppress("DSL_SCOPE_VIOLATION")
 plugins {
-    id("jumpkking.android.library")
-    id("jumpkking.android.hilt")
+    alias(libs.plugins.jumpkking.android.library)
+    alias(libs.plugins.jumpkking.android.hilt)
     alias(libs.plugins.protobuf)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.gms.google.services)
-}
-
-kotlin {
-    jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(11))
-    }
 }
 
 android {
@@ -19,6 +12,10 @@ android {
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 }
 
@@ -41,7 +38,6 @@ dependencies {
 
     //hilt
     implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
 
     implementation(libs.androidx.paging.common.ktx)
 
@@ -49,8 +45,8 @@ dependencies {
 
     //firebase
     implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.firestore.ktx)
-    implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.auth)
 }
 
 protobuf {

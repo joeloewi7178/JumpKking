@@ -1,16 +1,17 @@
 @Suppress("DSL_SCOPE_VIOLATION")
 plugins {
-    id("jumpkking.android.application")
-    id("jumpkking.android.application.compose")
-    id("jumpkking.android.hilt")
+    alias(libs.plugins.jumpkking.android.application)
+    alias(libs.plugins.jumpkking.android.application.compose)
+    alias(libs.plugins.jumpkking.android.hilt)
     alias(libs.plugins.gms.google.services)
     id("kotlin-parcelize")
     alias(libs.plugins.firebase.crashlytics)
+    alias(libs.plugins.androidx.baselineprofile)
 }
 
 kotlin {
     jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(11))
+        languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
 
@@ -19,8 +20,9 @@ android {
 
     defaultConfig {
         applicationId = "com.joeloewi.jumpkking"
-        versionCode = 14
-        versionName = "1.0.14"
+        versionCode = 15
+        versionName = "1.0.15"
+        targetSdk = 34
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -50,14 +52,6 @@ android {
             )
             signingConfig = signingConfigs.getByName("release")
         }
-
-        val benchmark by creating {
-            initWith(release)
-            signingConfig = signingConfigs.getByName("release")
-            matchingFallbacks += listOf("release")
-            isDebuggable = false
-            proguardFiles("baseline-profiles-rules.pro")
-        }
     }
 
     packaging {
@@ -65,6 +59,10 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+}
+
+baselineProfile {
+    automaticGenerationDuringBuild = true
 }
 
 dependencies {
@@ -92,11 +90,9 @@ dependencies {
 
     //hilt
     implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
 
     //hilt-extension
     implementation(libs.hilt.ext.work)
-    kapt(libs.hilt.ext.compiler)
 
     //compose
     implementation(libs.androidx.compose.foundation)
@@ -140,9 +136,9 @@ dependencies {
 
     ///firebase
     implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.analytics.ktx)
-    implementation(libs.firebase.crashlytics.ktx)
-    implementation(libs.firebase.firestore.ktx)
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.firestore)
 
     implementation(libs.tts)
 
@@ -154,8 +150,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.rx3)
 
     implementation(libs.androidx.profileinstaller)
-}
 
-hilt {
-    enableAggregatingTask = true
+    implementation(libs.kotlinx.collections.immutable)
 }

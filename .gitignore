@@ -78,7 +78,7 @@ captures/
 *.keystore
 
 # Google Services (e.g. APIs or Firebase)
-google-services.json
+# google-services.json
 
 # Android Patch
 gen-external-apklibs
@@ -120,6 +120,8 @@ obj/
 .idea/jarRepositories.xml
 .idea/navEditor.xml
 .idea/inspectionProfiles
+.idea/appInsightsSettings.xml
+.idea/deploymentTargetDropDown.xml
 
 # Legacy Eclipse project files
 .classpath

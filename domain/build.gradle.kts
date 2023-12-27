@@ -6,10 +6,12 @@ plugins {
 
 kotlin {
     jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(11))
+        languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
 
 dependencies {
     implementation(libs.androidx.paging.common.ktx)
+
+    implementation(libs.javax.inject)
 }
