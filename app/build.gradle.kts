@@ -1,8 +1,8 @@
 @Suppress("DSL_SCOPE_VIOLATION")
 plugins {
-    id("jumpkking.android.application")
-    id("jumpkking.android.application.compose")
-    id("jumpkking.android.hilt")
+    alias(libs.plugins.jumpkking.android.application)
+    alias(libs.plugins.jumpkking.android.application.compose)
+    alias(libs.plugins.jumpkking.android.hilt)
     alias(libs.plugins.gms.google.services)
     id("kotlin-parcelize")
     alias(libs.plugins.firebase.crashlytics)
@@ -11,7 +11,7 @@ plugins {
 
 kotlin {
     jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(11))
+        languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
 
@@ -22,6 +22,7 @@ android {
         applicationId = "com.joeloewi.jumpkking"
         versionCode = 14
         versionName = "1.0.14"
+        targetSdk = 34
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -58,6 +59,10 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+}
+
+baselineProfile {
+    automaticGenerationDuringBuild = true
 }
 
 dependencies {
@@ -131,9 +136,9 @@ dependencies {
 
     ///firebase
     implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.analytics.ktx)
-    implementation(libs.firebase.crashlytics.ktx)
-    implementation(libs.firebase.firestore.ktx)
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.firestore)
 
     implementation(libs.tts)
 
@@ -147,8 +152,4 @@ dependencies {
     implementation(libs.androidx.profileinstaller)
 
     implementation(libs.kotlinx.collections.immutable)
-}
-
-hilt {
-    enableAggregatingTask = true
 }

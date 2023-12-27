@@ -2,6 +2,7 @@ package com.joeloewi.jumpkking
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.shape.CornerSize
@@ -17,7 +18,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -37,9 +37,7 @@ import com.joeloewi.jumpkking.ui.navigation.friends.screen.FriendsScreen
 import com.joeloewi.jumpkking.ui.navigation.friends.screen.RankingScreen
 import com.joeloewi.jumpkking.ui.theme.JumpKkingTheme
 import com.joeloewi.jumpkking.util.LocalActivity
-import com.joeloewi.jumpkking.viewmodel.FriendsViewModel
 import com.joeloewi.jumpkking.viewmodel.MainViewModel
-import com.joeloewi.jumpkking.viewmodel.RankingViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
@@ -52,6 +50,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        DynamicColors.applyToActivityIfAvailable(this)
+        enableEdgeToEdge()
 
         var currentUser by mutableStateOf<Lce<Any>>(Lce.Loading)
 
@@ -67,12 +68,8 @@ class MainActivity : AppCompatActivity() {
             currentUser.isLoading
         }
 
-        DynamicColors.applyToActivityIfAvailable(this)
-
         setContent {
-            JumpKkingTheme(
-                window = window
-            ) {
+            JumpKkingTheme {
                 CompositionLocalProvider(LocalActivity provides this) {
                     JumpKkingApp()
                 }
@@ -90,6 +87,7 @@ fun JumpKkingApp() {
     )
     val bottomSheetNavigator = remember(sheetState) { BottomSheetNavigator(sheetState) }
     val navController = rememberNavController(bottomSheetNavigator)
+    val activity = LocalActivity.current
 
     ModalBottomSheetLayout(
         sheetShape = MaterialTheme.shapes.large.copy(
@@ -103,7 +101,7 @@ fun JumpKkingApp() {
     ) {
         NavHost(
             navController = navController,
-            route = "main",
+            route = activity::class.java.simpleName,
             startDestination = JumpKkingNavigation.Friends.route
         ) {
             navigation(
@@ -111,20 +109,18 @@ fun JumpKkingApp() {
                 route = JumpKkingNavigation.Friends.route
             ) {
                 composable(route = FriendsDestination.FriendsScreen.route) {
-                    val friendsViewModel: FriendsViewModel = hiltViewModel()
-
                     FriendsScreen(
-                        navController = navController,
-                        friendsViewModel = friendsViewModel
+                        onViewRankingButtonClick = {
+                            navController.navigate(FriendsDestination.RankingScreen.route)
+                        }
                     )
                 }
 
                 bottomSheet(route = FriendsDestination.RankingScreen.route) {
-                    val rankingViewModel: RankingViewModel = hiltViewModel()
-
                     RankingScreen(
-                        navController = navController,
-                        rankingViewModel = rankingViewModel
+                        onCloseButtonClick = {
+                            navController.navigateUp()
+                        }
                     )
                 }
             }

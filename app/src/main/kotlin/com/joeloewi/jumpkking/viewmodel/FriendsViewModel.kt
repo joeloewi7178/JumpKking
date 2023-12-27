@@ -73,12 +73,12 @@ class FriendsViewModel @Inject constructor(
                 Lce.Error(cause)
             }
         )
-    }.flowOn(Dispatchers.IO).stateIn(
+    }.catch { }.flowOn(Dispatchers.IO).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(),
         initialValue = Lce.Loading
     )
-    val jumpCount = _jumpCount.stateIn(
+    val jumpCount = _jumpCount.catch { }.flowOn(Dispatchers.IO).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(),
         initialValue = Values().jumpCount
@@ -104,7 +104,7 @@ class FriendsViewModel @Inject constructor(
         }
 
         FirebaseCrashlytics.getInstance().recordException(cause)
-    }.stateIn(
+    }.flowOn(Dispatchers.IO).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(),
         initialValue = Lce.Loading
@@ -115,4 +115,8 @@ class FriendsViewModel @Inject constructor(
             setJumpCountUseCase(getValuesUseCase().first().jumpCount + 1)
         }
     }
+}
+
+enum class Friend {
+    Hamster, Cat
 }

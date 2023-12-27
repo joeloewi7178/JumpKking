@@ -19,12 +19,12 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 sealed class RoundTripValue {
     open val isIdle: Boolean = false
 
-    object Idle : RoundTripValue() {
+    data object Idle : RoundTripValue() {
         override val isIdle: Boolean = true
     }
 
-    object Going : RoundTripValue()
-    object TurningBack : RoundTripValue()
+    data object Going : RoundTripValue()
+    data object TurningBack : RoundTripValue()
 }
 
 @Stable
@@ -97,5 +97,5 @@ fun animateRoundTripByDpAsState(
         coroutineScope.launch {
             roundTripState.doTurnBackOrEnterIdle(it)
         }
-    }
+    }, label = ""
 )

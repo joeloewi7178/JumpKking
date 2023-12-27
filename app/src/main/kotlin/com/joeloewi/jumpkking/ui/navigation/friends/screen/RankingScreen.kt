@@ -37,42 +37,44 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.fade
 import com.google.accompanist.placeholder.placeholder
-import com.joeloewi.jumpkking.state.RankingState
-import com.joeloewi.jumpkking.state.rememberRankingState
+import com.joeloewi.domain.entity.ReportCard
 import com.joeloewi.jumpkking.util.castToQuotaReachedExceptionAndGetMessage
 import com.joeloewi.jumpkking.viewmodel.RankingViewModel
 import java.text.DecimalFormat
 
 @Composable
 fun RankingScreen(
-    navController: NavController,
-    rankingViewModel: RankingViewModel
+    onCloseButtonClick: () -> Unit,
+    rankingViewModel: RankingViewModel = hiltViewModel()
 ) {
-    val rankingState = rememberRankingState(
-        navController = navController,
-        rankingViewModel = rankingViewModel
-    )
+    val pagedReportCards = rankingViewModel.pagedReportCards.collectAsLazyPagingItems()
+    val androidId = rankingViewModel.androidId
 
     RankingContent(
-        rankingState = rankingState
+        pagedReportCards = pagedReportCards,
+        androidId = androidId,
+        onCloseButtonClick = onCloseButtonClick
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun RankingContent(
-    rankingState: RankingState
+    pagedReportCards: LazyPagingItems<ReportCard>,
+    androidId: String,
+    onCloseButtonClick: () -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val pagedReportCards = rankingState.pagedReportCards
 
     LaunchedEffect(pagedReportCards.loadState) {
         val loadStates = mutableListOf<LoadState>()
@@ -145,7 +147,7 @@ private fun RankingContent(
                 },
                 actions = {
                     IconButton(
-                        onClick = rankingState::onCloseButtonClick
+                        onClick = onCloseButtonClick
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
@@ -169,8 +171,7 @@ private fun RankingContent(
                 val item = runCatching { pagedReportCards[index] }.getOrNull()
 
                 if (item != null) {
-                    val isMyReportCard =
-                        item.androidId == rankingState.androidId
+                    val isMyReportCard = item.androidId == androidId
 
                     val backgroundColor =
                         if (isMyReportCard) {

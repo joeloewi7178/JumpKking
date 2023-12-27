@@ -39,30 +39,32 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.joeloewi.jumpkking.R
-import com.joeloewi.jumpkking.state.Friend
-import com.joeloewi.jumpkking.state.FriendsState
 import com.joeloewi.jumpkking.state.Lce
-import com.joeloewi.jumpkking.state.rememberFriendsState
 import com.joeloewi.jumpkking.util.RoundTripState
 import com.joeloewi.jumpkking.util.RoundTripValue
 import com.joeloewi.jumpkking.util.animateRoundTripByDpAsState
 import com.joeloewi.jumpkking.util.castToQuotaReachedExceptionAndGetMessage
 import com.joeloewi.jumpkking.util.rememberRoundTripState
+import com.joeloewi.jumpkking.viewmodel.Friend
 import com.joeloewi.jumpkking.viewmodel.FriendsViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import nl.marc_apps.tts.TextToSpeechInstance
@@ -70,33 +72,39 @@ import java.text.DecimalFormat
 
 @Composable
 fun FriendsScreen(
-    navController: NavController,
+    onViewRankingButtonClick: () -> Unit,
     friendsViewModel: FriendsViewModel = hiltViewModel()
 ) {
-    val friendsState = rememberFriendsState(
-        navController = navController,
-        friendsViewModel = friendsViewModel
-    )
+    val jumpCount by friendsViewModel.jumpCount.collectAsStateWithLifecycle()
+    val textToSpeech by friendsViewModel.textToSpeech.collectAsStateWithLifecycle()
+    val insertReportCardState by friendsViewModel.insertReportCardState.collectAsStateWithLifecycle()
 
-    FriendsContent(friendsState = friendsState)
+    FriendsContent(
+        jumpCount = { jumpCount },
+        textToSpeech = { textToSpeech },
+        insertReportCardState = { insertReportCardState },
+        onViewRankingButtonClick = onViewRankingButtonClick,
+        onCountChange = friendsViewModel::increaseJumpCount
+    )
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun FriendsContent(
-    friendsState: FriendsState,
+    jumpCount: () -> Long,
+    textToSpeech: () -> Lce<TextToSpeechInstance>,
+    insertReportCardState: () -> Lce<Void?>,
+    onViewRankingButtonClick: () -> Unit,
+    onCountChange: () -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val jumpCount = friendsState.jumpCount
-    val textToSpeech = friendsState.textToSpeech
-    val pagerState = rememberPagerState { friendsState.friends.size }
-    val insertReportCardState = friendsState.insertReportCardState
+    val pagerState = rememberPagerState { Friend.entries.size }
 
-    LaunchedEffect(insertReportCardState) {
-        with(insertReportCardState) {
-            when (this) {
+    LaunchedEffect(Unit) {
+        snapshotFlow(insertReportCardState).catch { }.flowOn(Dispatchers.IO).collect {
+            when (it) {
                 is Lce.Error -> {
-                    val message = error.castToQuotaReachedExceptionAndGetMessage()
+                    val message = it.error.castToQuotaReachedExceptionAndGetMessage()
 
                     with(snackbarHostState) {
                         currentSnackbarData?.dismiss()
@@ -130,8 +138,8 @@ private fun FriendsContent(
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                AnimatedCount(count = jumpCount)
-                IconButton(onClick = friendsState::onViewRankingButtonClick) {
+                AnimatedCount(count = jumpCount())
+                IconButton(onClick = onViewRankingButtonClick) {
                     Icon(
                         imageVector = Icons.Default.Leaderboard,
                         contentDescription = Icons.Default.Leaderboard.name
@@ -145,9 +153,9 @@ private fun FriendsContent(
                 HorizontalPager(
                     state = pagerState,
                     pageSize = PageSize.Fill,
-                    key = { Friend.values()[it].name }
+                    key = { Friend.entries[it].name }
                 ) { page ->
-                    when (Friend.values()[page]) {
+                    when (Friend.entries[page]) {
                         Friend.Hamster -> {
                             val configuration = LocalConfiguration.current
                             val maxOffset by remember(configuration) {
@@ -160,14 +168,14 @@ private fun FriendsContent(
                             HamsterCard(
                                 textToSpeech = textToSpeech,
                                 roundTripState = roundTripState,
-                                onCountChange = friendsState::increaseJumpCount
+                                onCountChange = onCountChange
                             )
                         }
 
                         Friend.Cat -> {
                             CatCard(
                                 textToSpeech = textToSpeech,
-                                onCountChange = friendsState::increaseJumpCount
+                                onCountChange = onCountChange
                             )
                         }
                     }
@@ -179,7 +187,7 @@ private fun FriendsContent(
             ) {
                 HorizontalPagerIndicator(
                     pagerState = pagerState,
-                    pageCount = friendsState.friends.size
+                    pageCount = Friend.entries.size
                 )
             }
         }
@@ -215,7 +223,7 @@ private fun AnimatedCount(
 
 @Composable
 private fun HamsterCard(
-    textToSpeech: Lce<TextToSpeechInstance>,
+    textToSpeech: () -> Lce<TextToSpeechInstance>,
     roundTripState: RoundTripState,
     onCountChange: () -> Unit
 ) {
@@ -242,7 +250,7 @@ private fun HamsterCard(
 
 @Composable
 private fun CatCard(
-    textToSpeech: Lce<TextToSpeechInstance>,
+    textToSpeech: () -> Lce<TextToSpeechInstance>,
     onCountChange: () -> Unit
 ) {
     Card(
@@ -267,7 +275,7 @@ private fun CatCard(
 
 @Composable
 private fun CatImage(
-    textToSpeech: Lce<TextToSpeechInstance>,
+    textToSpeech: () -> Lce<TextToSpeechInstance>,
     onCountChange: () -> Unit
 ) {
     val meowing = remember { "뫼애앵" }
@@ -296,14 +304,14 @@ private fun CatImage(
             .clickable(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() },
-                enabled = textToSpeech is Lce.Content && !isTtsPlaying
+                enabled = textToSpeech() is Lce.Content && !isTtsPlaying
             ) {
                 onCountChange()
 
                 coroutineScope.launch(Dispatchers.IO) {
                     onIsTtsPlayingChange(true)
 
-                    textToSpeech.content?.runCatching {
+                    textToSpeech().content?.runCatching {
                         say(
                             text = meowing,
                             clearQueue = true,
@@ -324,39 +332,35 @@ private fun CatImage(
 
 @Composable
 private fun HamsterImage(
-    textToSpeech: Lce<TextToSpeechInstance>,
+    textToSpeech: () -> Lce<TextToSpeechInstance>,
     roundTripState: RoundTripState,
     onCountChange: () -> Unit
 ) {
     val kking = remember { "끼잉!" }
     val coroutineScope = rememberCoroutineScope()
-    val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
     val roundTripValue = roundTripState.roundTripValue
-    val roundTripAnimationOffset by animateRoundTripByDpAsState(roundTripState = roundTripState)
-    val idleHamster = remember(context, lifecycleOwner) {
-        ImageRequest.Builder(context)
-            .data(R.drawable.idle_hamster)
-            .lifecycle(lifecycleOwner)
-            .build()
-    }
-    val jumpingHamster = remember(context, lifecycleOwner) {
-        ImageRequest.Builder(context)
-            .data(R.drawable.jumping_hamster)
-            .lifecycle(lifecycleOwner)
-            .build()
-    }
+    val idleHamster = ImageRequest.Builder(context)
+        .data(R.drawable.idle_hamster)
+        .build()
+    val jumpingHamster = ImageRequest.Builder(context)
+        .data(R.drawable.jumping_hamster)
+        .build()
 
     AsyncImage(
         modifier = Modifier
             .fillMaxWidth(0.4f)
             .aspectRatio(1.0f)
             .padding(bottom = 16.dp)
-            .absoluteOffset(y = roundTripAnimationOffset)
+            .composed {
+                val roundTripAnimationOffset by animateRoundTripByDpAsState(roundTripState = roundTripState)
+
+                absoluteOffset(y = roundTripAnimationOffset)
+            }
             .clickable(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() },
-                enabled = roundTripValue.isIdle && textToSpeech is Lce.Content
+                enabled = roundTripValue.isIdle && textToSpeech() is Lce.Content
             ) {
                 onCountChange()
 
@@ -365,15 +369,12 @@ private fun HamsterImage(
                         roundTripState.start()
                     }
 
-                    textToSpeech.content
+                    textToSpeech().content
                         ?.runCatching {
                             say(
                                 text = kking,
                                 clearQueue = true
                             )
-                        }
-                        ?.onFailure { cause ->
-                            cause.printStackTrace()
                         }
                 }
             },

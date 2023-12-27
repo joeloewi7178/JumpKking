@@ -6,14 +6,15 @@ group = "com.joeloewi.jumpkking.buildlogic"
 
 kotlin {
     jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(11))
+        languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
 
 dependencies {
     compileOnly(libs.android.gradlePlugin)
+    compileOnly(libs.android.tools.common)
+    compileOnly(libs.firebase.crashlytics.gradlePlugin)
     compileOnly(libs.kotlin.gradlePlugin)
-    compileOnly(libs.gms.google.services.gradlePlugin)
     compileOnly(libs.ksp.gradlePlugin)
 }
 
