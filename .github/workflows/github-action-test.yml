@@ -58,7 +58,4 @@ jobs:
           api-level: 34
           target: aosp_atd
           arch: x86_64
-          script: ./gradlew :app:assembleRelease
-
-      - name: Build Release AAB
-        run: ./gradlew bundleRelease
+          script: ./gradlew :app:bundleRelease
