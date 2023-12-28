@@ -52,13 +52,13 @@ jobs:
           fileDir: './'
           encodedString: ${{ secrets.SIGNING_KEY }}
 
-      - name: Build release variant including baseline profile generation
-        run: ./gradlew :app:assembleRelease
-          -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=BaselineProfile
-          -Pandroid.testoptions.manageddevices.emulator.gpu="swiftshader_indirect"
-          -Pandroid.experimental.testOptions.managedDevices.emulator.showKernelLogging=true
-          -Pandroid.experimental.androidTest.numManagedDeviceShards=1
-          -Pandroid.experimental.testOptions.managedDevices.maxConcurrentDevices=1
+      - name: Generate baseline profile
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: aosp_atd
+          arch: x86_64
+          script: ./gradlew :app:assembleRelease
 
       - name: Build Release AAB
         run: ./gradlew bundleRelease
