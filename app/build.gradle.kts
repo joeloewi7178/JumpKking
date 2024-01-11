@@ -20,7 +20,7 @@ android {
 
     defaultConfig {
         applicationId = "com.joeloewi.jumpkking"
-        versionCode = 16
+        versionCode = 17
         versionName = "1.0.15"
         targetSdk = 34
 
