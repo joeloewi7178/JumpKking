@@ -55,7 +55,7 @@ rxjava3 = "3.1.8"
 rxjava3Android = "3.0.2"
 rxjava3Kotlin = "3.0.1"
 androidxBaselineProfile = "1.2.3"
-androidTools = "31.2.2"
+androidTools = "31.3.0"
 fornewidPlaceholderMaterial3 = "1.0.1"
 
 [libraries]
