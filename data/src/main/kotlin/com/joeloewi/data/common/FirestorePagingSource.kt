@@ -16,19 +16,31 @@ class FirestorePagingSource(
 
     override suspend fun load(params: LoadParams<PageKey>): LoadResult<PageKey, DocumentSnapshot> {
         return try {
-            val documentsSnapshots = (params.key?.let {
-                it.getPageQuery(query, params.loadSize)[source]
-            } ?: query.limit(params.loadSize.toLong())[source]).await().documents
+            val key = params.key
+            val documentsSnapshots = (key?.getPageQuery(query, params.loadSize)?.get(source)
+                ?: query.limit(params.loadSize.toLong())[source]).await().documents
             val nextKey = PageKey(documentsSnapshots.lastOrNull(), null)
+            val prevKey = PageKey(null, documentsSnapshots.firstOrNull())
+            val original = query.get(source).await()
 
             LoadResult.Page(
                 data = documentsSnapshots,
-                prevKey = null,
+                prevKey = if (key == null) {
+                    null
+                } else {
+                    prevKey
+                },
                 nextKey = if (documentsSnapshots.isEmpty()) {
                     null
                 } else {
                     nextKey
                 },
+                itemsBefore = key?.endBefore?.let {
+                    original.indexOf(it)
+                } ?: 0,
+                itemsAfter = key?.startAfter?.let {
+                    original.reversed().indexOf(it)
+                } ?: 0
             )
         } catch (cause: Throwable) {
             LoadResult.Error(cause)

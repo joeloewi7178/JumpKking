@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -32,24 +31,28 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import com.google.accompanist.placeholder.PlaceholderHighlight
-import com.google.accompanist.placeholder.fade
-import com.google.accompanist.placeholder.placeholder
 import com.joeloewi.domain.entity.ReportCard
 import com.joeloewi.jumpkking.util.castToQuotaReachedExceptionAndGetMessage
 import com.joeloewi.jumpkking.viewmodel.RankingViewModel
+import io.github.fornewid.placeholder.foundation.PlaceholderHighlight
+import io.github.fornewid.placeholder.foundation.fade
+import io.github.fornewid.placeholder.foundation.placeholder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.mapLatest
 import java.text.DecimalFormat
 
 @Composable
@@ -76,26 +79,20 @@ private fun RankingContent(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(pagedReportCards.loadState) {
-        val loadStates = mutableListOf<LoadState>()
-
-        with(pagedReportCards.loadState.source) {
-            loadStates.add(append)
-            loadStates.add(prepend)
-            loadStates.add(refresh)
-        }
-
-        loadStates.forEach {
-            if (it is LoadState.Error) {
-                val message = it.error.castToQuotaReachedExceptionAndGetMessage()
-
-                with(snackbarHostState) {
-                    currentSnackbarData?.dismiss()
-                    showSnackbar(
-                        message = message,
-                        duration = SnackbarDuration.Indefinite
-                    )
-                }
+    LaunchedEffect(Unit) {
+        snapshotFlow { pagedReportCards.loadState }.mapLatest { it.source }.mapLatest {
+            with(pagedReportCards.loadState.source) { listOf(append, prepend, refresh) }
+        }.mapLatest { loadStates ->
+            loadStates.filterIsInstance<LoadState.Error>().firstOrNull()
+        }.filterNotNull().mapLatest {
+            it.error.castToQuotaReachedExceptionAndGetMessage()
+        }.catch { }.flowOn(Dispatchers.IO).collectLatest { message ->
+            with(snackbarHostState) {
+                currentSnackbarData?.dismiss()
+                showSnackbar(
+                    message = message,
+                    duration = SnackbarDuration.Indefinite
+                )
             }
         }
     }
@@ -166,100 +163,62 @@ private fun RankingContent(
         ) {
             items(
                 count = pagedReportCards.itemCount,
-                key = pagedReportCards.itemKey { it.androidId }
+                key = pagedReportCards.itemKey { it.androidId },
+                contentType = pagedReportCards.itemContentType { item -> item::class.java.simpleName }
             ) { index ->
                 val item = runCatching { pagedReportCards[index] }.getOrNull()
 
-                if (item != null) {
-                    val isMyReportCard = item.androidId == androidId
+                val isMyReportCard = item?.androidId == androidId
 
-                    val backgroundColor =
-                        if (isMyReportCard) {
-                            MaterialTheme.colorScheme.surfaceVariant
-                        } else {
-                            Color.Unspecified
-                        }
+                val backgroundColor =
+                    if (isMyReportCard) {
+                        MaterialTheme.colorScheme.surfaceVariant
+                    } else {
+                        Color.Unspecified
+                    }
 
-                    ListItem(
-                        modifier = Modifier.animateItemPlacement(),
-                        colors = ListItemDefaults.colors(
-                            containerColor = backgroundColor
-                        ),
-                        leadingContent = {
-                            Text(text = "${index + 1}")
-                        },
-                        headlineContent = {
-                            Text(text = DecimalFormat.getInstance().format(item.jumpCount))
-                        },
-                        supportingContent = if (isMyReportCard) {
-                            {
-                                Text(
-                                    text = "나"
-                                )
-                            }
-                        } else {
-                            null
+                ListItem(
+                    modifier = Modifier.animateItemPlacement(),
+                    colors = ListItemDefaults.colors(
+                        containerColor = backgroundColor
+                    ),
+                    leadingContent = {
+                        Text(
+                            modifier = Modifier
+                                .placeholder(
+                                    visible = item == null,
+                                    color = MaterialTheme.colorScheme.outline,
+                                    highlight = PlaceholderHighlight.fade(
+                                        highlightColor = MaterialTheme.colorScheme.background,
+                                    )
+                                ),
+                            text = "${index + 1}"
+                        )
+                    },
+                    headlineContent = {
+                        Text(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .placeholder(
+                                    visible = item == null,
+                                    color = MaterialTheme.colorScheme.outline,
+                                    highlight = PlaceholderHighlight.fade(
+                                        highlightColor = MaterialTheme.colorScheme.background,
+                                    )
+                                ),
+                            text = item?.jumpCount?.let { DecimalFormat.getInstance().format(it) }
+                                ?: ""
+                        )
+                    },
+                    supportingContent = if (isMyReportCard) {
+                        {
+                            Text(text = "나")
                         }
-                    )
-                } else {
-                    ReportCardListItemPlaceHolder()
-                }
+                    } else {
+                        null
+                    }
+                )
             }
         }
     }
-}
-
-@Composable
-private fun ReportCardListItemPlaceHolder(
-    isPlaceholderVisible: Boolean = true
-) {
-    ListItem(
-        modifier = Modifier
-            .fillMaxWidth(),
-        leadingContent = {
-            AsyncImage(
-                modifier = Modifier
-                    .size(24.dp)
-                    .placeholder(
-                        visible = isPlaceholderVisible,
-                        color = MaterialTheme.colorScheme.outline,
-                        highlight = PlaceholderHighlight.fade(
-                            highlightColor = MaterialTheme.colorScheme.background,
-                        )
-                    ),
-                model = ImageRequest.Builder(
-                    LocalContext.current
-                ).build(),
-                contentDescription = null
-            )
-        },
-        headlineContent = {
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .placeholder(
-                        visible = isPlaceholderVisible,
-                        color = MaterialTheme.colorScheme.outline,
-                        highlight = PlaceholderHighlight.fade(
-                            highlightColor = MaterialTheme.colorScheme.background,
-                        )
-                    ),
-                text = ""
-            )
-        },
-        supportingContent = {
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .placeholder(
-                        visible = isPlaceholderVisible,
-                        color = MaterialTheme.colorScheme.outline,
-                        highlight = PlaceholderHighlight.fade(
-                            highlightColor = MaterialTheme.colorScheme.background,
-                        )
-                    ),
-                text = ""
-            )
-        }
-    )
 }

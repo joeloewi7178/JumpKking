@@ -107,7 +107,6 @@ dependencies {
     //accompanist
     implementation(libs.accompanist.permissions)
     implementation(libs.accompanist.pager)
-    implementation(libs.accompanist.placeholder)
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.accompanist.pager.indicators)
     implementation(libs.accompanist.themeadapter.material3)
@@ -153,4 +152,6 @@ dependencies {
     implementation(libs.androidx.profileinstaller)
 
     implementation(libs.kotlinx.collections.immutable)
+
+    implementation(libs.fornewid.placeholder.material3)
 }

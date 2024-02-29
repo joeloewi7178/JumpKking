@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -136,7 +137,8 @@ private fun FriendsContent(
                 modifier = Modifier
                     .padding(vertical = 16.dp)
                     .fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 AnimatedCount(count = jumpCount())
                 IconButton(onClick = onViewRankingButtonClick) {
@@ -187,7 +189,9 @@ private fun FriendsContent(
             ) {
                 HorizontalPagerIndicator(
                     pagerState = pagerState,
-                    pageCount = Friend.entries.size
+                    pageCount = Friend.entries.size,
+                    activeColor = LocalContentColor.current,
+                    inactiveColor = LocalContentColor.current.copy(alpha = 0.38f)
                 )
             }
         }
