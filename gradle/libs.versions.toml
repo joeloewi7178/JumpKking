@@ -56,7 +56,7 @@ rxjava3Android = "3.0.2"
 rxjava3Kotlin = "3.0.1"
 androidxBaselineProfile = "1.2.3"
 androidTools = "31.3.0"
-fornewidPlaceholderMaterial3 = "1.0.1"
+fornewidPlaceholderMaterial3 = "1.1.2"
 
 [libraries]
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist" }
