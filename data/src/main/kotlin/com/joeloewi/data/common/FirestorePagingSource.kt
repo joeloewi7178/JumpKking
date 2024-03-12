@@ -29,8 +29,8 @@ class FirestorePagingSource(
                 data = documentsSnapshots,
                 prevKey = prevKey,
                 nextKey = nextKey,
-                itemsBefore = original.indexOf(firstItem).takeIf { it != -1 } ?: 0,
-                itemsAfter = original.reversed().indexOf(lastItem).takeIf { it != -1 } ?: 0,
+                itemsBefore = original.indexOfFirst { it == firstItem }.takeIf { it != -1 } ?: 0,
+                itemsAfter = original.indexOfLast { it == lastItem }.takeIf { it != -1 } ?: 0,
             )
         } catch (cause: Throwable) {
             LoadResult.Error(cause)
