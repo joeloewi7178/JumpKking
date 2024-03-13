@@ -5,10 +5,12 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.toObject
 import com.joeloewi.data.common.FirestorePagingSource
+import com.joeloewi.data.common.PageKey
 import com.joeloewi.data.entity.ReportCardEntity
 import com.joeloewi.data.mapper.ReportCardMapper
 import com.joeloewi.data.repository.remote.ReportCardDataSource
@@ -28,6 +30,7 @@ class ReportCardDataSourceImpl @Inject constructor(
     private val androidId: String
 ) : ReportCardDataSource {
     override fun getAllPaged(source: Source): Flow<PagingData<ReportCard>> = Pager(
+        initialKey = PageKey(null, null),
         config = PagingConfig(
             pageSize = 8
         ),
@@ -39,6 +42,8 @@ class ReportCardDataSourceImpl @Inject constructor(
                 ).orderBy(
                     "timestamp",
                     Query.Direction.ASCENDING
+                ).orderBy(
+                    FieldPath.documentId()
                 ),
                 source
             )

@@ -46,7 +46,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -285,20 +284,13 @@ private fun CatImage(
     val meowing = remember { "뫼애앵" }
     val coroutineScope = rememberCoroutineScope()
     val (isTtsPlaying, onIsTtsPlayingChange) = remember { mutableStateOf(false) }
-    val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
-    val idleCat = remember(context, lifecycleOwner) {
-        ImageRequest.Builder(context)
-            .data(R.drawable.idle_mysterious_cat)
-            .lifecycle(lifecycleOwner)
-            .build()
-    }
-    val meowingCat = remember(context, lifecycleOwner) {
-        ImageRequest.Builder(context)
-            .data(R.drawable.meowing_mysterious_cat)
-            .lifecycle(lifecycleOwner)
-            .build()
-    }
+    val idleCat = ImageRequest.Builder(context)
+        .data(R.drawable.idle_mysterious_cat)
+        .build()
+    val meowingCat = ImageRequest.Builder(context)
+        .data(R.drawable.meowing_mysterious_cat)
+        .build()
 
     AsyncImage(
         modifier = Modifier
